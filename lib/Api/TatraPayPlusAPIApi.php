@@ -213,7 +213,7 @@ class TatraPayPlusAPIApi
             $statusCode = $response->getStatusCode();
 
             if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(sprintf('[%d] Error connecting to the API (%s)', $statusCode, (string) $request->getUri(), (string) $response->getBody()), $statusCode, $response->getHeaders(), (string) $response->getBody());
+                throw new ApiException(sprintf('[%d] Error connecting to the API (%s)', $statusCode, (string) $request->getUri(), (string) $response->getBody()), $statusCode, $response->getHeaders(), (string) $response->getBody(), (string) $request);
             }
 
             if (!is_null($target_structure)) {

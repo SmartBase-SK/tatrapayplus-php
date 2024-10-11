@@ -30,6 +30,7 @@ class ApiException extends \Exception
      * @var \stdClass|string|null
      */
     protected $responseObject;
+    protected $requestBody;
 
     /**
      * Constructor
@@ -39,11 +40,12 @@ class ApiException extends \Exception
      * @param string[]|null $responseHeaders HTTP response header
      * @param \stdClass|string|null $responseBody HTTP decoded body of the server response either as \stdClass or string
      */
-    public function __construct($message = '', $code = 0, $responseHeaders = [], $responseBody = null)
+    public function __construct($message = '', $code = 0, $responseHeaders = [], $responseBody = null, $requestBody = null)
     {
         parent::__construct($message, $code);
         $this->responseHeaders = $responseHeaders;
         $this->responseBody = $responseBody;
+        $this->requestBody = $requestBody;
     }
 
     /**
@@ -87,4 +89,11 @@ class ApiException extends \Exception
     {
         $this->responseObject = $obj;
     }
+
+	/**
+	 * @return mixed|null
+	 */
+	public function getRequestBody(): mixed {
+		return $this->requestBody;
+	}
 }
