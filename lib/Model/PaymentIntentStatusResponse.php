@@ -373,9 +373,12 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
         } elseif ($this->getSelectedPaymentMethod() == PaymentMethod::PAY_LATER) {
             $value = new PayLaterStatus();
             $value->setStatus($status);
+<<<<<<< HEAD
         } elseif ($this->getSelectedPaymentMethod() == PaymentMethod::QR_PAY) {
 	        $value = new QRStatus();
 	        $value->setStatus($status);
+=======
+>>>>>>> 6162d74a6789ce86edf9ade1d9ce6d193accfefe
         }
         $this->container['status'] = $value;
 

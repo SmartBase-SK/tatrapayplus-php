@@ -142,6 +142,7 @@ class TatraPayPlusService
                     'alt' => 'paylater',
                 ],
             ],
+<<<<<<< HEAD
             Model\PaymentMethod::QR_PAY => [
 	            [
 		            'id' => 'qr',
@@ -149,6 +150,8 @@ class TatraPayPlusService
 		            'alt' => 'qr',
 	            ],
             ],
+=======
+>>>>>>> 6162d74a6789ce86edf9ade1d9ce6d193accfefe
         ];
 
         return $icons;

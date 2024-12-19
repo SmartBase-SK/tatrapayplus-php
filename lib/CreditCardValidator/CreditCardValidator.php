@@ -157,6 +157,7 @@ class CreditCardValidator
         return $candidate;
     }
 
+<<<<<<< HEAD
 	/**
 	 * Gets credit card shortcode
 	 *
@@ -173,6 +174,8 @@ class CreditCardValidator
 		}
 	}
 
+=======
+>>>>>>> 6162d74a6789ce86edf9ade1d9ce6d193accfefe
     /**
      * Checks if the credit card number is valid.
      * 
