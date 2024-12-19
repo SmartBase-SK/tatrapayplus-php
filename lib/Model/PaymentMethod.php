@@ -19,10 +19,7 @@ class PaymentMethod
     public const CARD_PAY = 'CARD_PAY';
 
     public const PAY_LATER = 'PAY_LATER';
-<<<<<<< HEAD
     public const QR_PAY = 'QR_PAY';
-=======
->>>>>>> 6162d74a6789ce86edf9ade1d9ce6d193accfefe
 
     /**
      * Gets allowable values of the enum
@@ -35,10 +32,7 @@ class PaymentMethod
             self::BANK_TRANSFER,
             self::CARD_PAY,
             self::PAY_LATER,
-<<<<<<< HEAD
             self::QR_PAY,
-=======
->>>>>>> 6162d74a6789ce86edf9ade1d9ce6d193accfefe
         ];
     }
 }
