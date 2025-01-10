@@ -104,7 +104,7 @@ class TatraPayPlusService
             Model\PaymentMethod::CARD_PAY => [
                 [
                     'id' => 'tatrapayplus',
-                    'src' => 'tatrapayplus.svg',
+                    'src' => 'tatrapayplus.png',
                     'alt' => 'tatrapayplus',
                 ],
                 [

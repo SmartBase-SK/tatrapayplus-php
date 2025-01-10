@@ -1,6 +1,7 @@
 {
     "name": "tatrapayplus/tatrapayplus_api_client",
     "type": "library",
+    "license": "OSL-3.0",
     "autoload": {
         "psr-4": {
             "Tatrapayplus\\TatrapayplusApiClient\\" : "lib/"
