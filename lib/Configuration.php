@@ -74,7 +74,7 @@ class Configuration
      *
      * @var string
      */
-    protected $userAgent = 'Tatrapayplus-plugin/1.0.1/PHP';
+    protected $userAgent = 'Tatrapayplus-plugin/1.1.0/PHP';
 
     /**
      * Debug switch (default set to false)
