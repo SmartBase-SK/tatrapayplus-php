@@ -4,7 +4,7 @@
     "description": "PHP SDK for Tatrapay+ payment gateway API",
     "license": "OSL-3.0",
     "scripts": {
-        "test": "phpunit tests/tests.php"
+        "test": "phpunit --bootstrap vendor/autoload.php tests/tests.php"
     },
     "autoload": {
         "psr-4": {
