@@ -12,8 +12,8 @@ final class Tests extends TestCase
         $client = new MagentoCurlClient(null, null);
         $access_token = TatraPayPlusService::retrieve_access_token_with_credentials(
             $client,
-            'l7ba7ffa0bf66b49b88d17dfe144955f54',
-            'b88957109f344ab685a275a5fc9ab39e',
+            'client_id',
+            'client_secret',
         );
 
         $this->assertTrue(is_string($access_token));
