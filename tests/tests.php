@@ -1,8 +1,13 @@
 <?php declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 
+use Tatrapayplus\TatrapayplusApiClient\HttpResponse;
+use Tatrapayplus\TatrapayplusApiClient\Model\CardPayUpdateInstruction;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse;
+use Tatrapayplus\TatrapayplusApiClient\Model\AmountRangeRule;
+use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodRules;
+use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodsListResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\BasePayment;
 use Tatrapayplus\TatrapayplusApiClient\Model\Amount;
 use Tatrapayplus\TatrapayplusApiClient\Model\E2e;
@@ -16,9 +21,9 @@ use Tatrapayplus\TatrapayplusApiClient\Model\OrderItem;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetail;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetailLangUnit;
 use Tatrapayplus\TatrapayplusApiClient\Configuration;
-use Tatrapayplus\TatrapayplusApiClient\MagentoCurlClient;
+use Tatrapayplus\TatrapayplusApiClient\CurlClient;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
-use Tatrapayplus\TatrapayplusApiClient\api\TatraPayPlusAPIApi;
+use Tatrapayplus\TatrapayplusApiClient\Api\TatraPayPlusAPIApi;
 
 
 final class Tests extends TestCase
@@ -40,72 +45,85 @@ final class Tests extends TestCase
         $this->assertSame($result, 'test');
     }
 
-    public function testRetrieveAccessToken(): void
+    public function testRemoveDiacritics(): void
     {
-        $client = new MagentoCurlClient(null, null);
-        $access_token = TatraPayPlusService::retrieve_access_token_with_credentials(
-            $client,
-            $this->client_id,
-            $this->client_secret,
-        );
+        $initiate_payment_request = $this->getPaymentPayload(10, 'EUR');
 
-        $this->assertTrue(is_string($access_token));
+        $this->assertSame($initiate_payment_request->getCardDetail()->getCardHolder(), 'Janko Hrasko');
     }
 
     public function testGetAvailablePaymentMethods(): void
     {
-        $client = new MagentoCurlClient(null, null);
-        $access_token = TatraPayPlusService::retrieve_access_token_with_credentials(
-            $client,
+        $api_instance  = new TatraPayPlusAPIApi(
             $this->client_id,
             $this->client_secret,
         );
-        $this->assertTrue(is_string($access_token));
 
-        $available_methods = TatraPayPlusService::get_available_payment_methods(
-            $client,
-            $access_token,
-            TatraPayPlusService::SANDBOX,
-        );
+        $available_methods = $api_instance->getAvailableMethods();
 
         $this->assertTrue(is_array($available_methods));
         $this->assertSame($available_methods['CARD_PAY']['supported_currencies'], ['EUR', 'USD']);
     }
 
-    public function testIsCurrencySupportedForSpecificMethod(): void
+    public function testGetAvailablePaymentMethodsConditional(): void
     {
-        $client = new MagentoCurlClient(null, null);
-        $access_token = TatraPayPlusService::retrieve_access_token_with_credentials(
-            $client,
-            $this->client_id,
-            $this->client_secret,
+        $mocked_methods = array(
+            new PaymentMethodRules(
+                array(
+                    "supported_currency" => ["EUR"],
+                    "paymentMethod" => "TEST1",
+                    "amount_range_rule" => new AmountRangeRule(
+                        array(
+                            "min_amount" => 1,
+                            "max_amount" => 1000,
+                        )
+                    ),
+                ),
+            ),
+            new PaymentMethodRules(
+                array(
+                    "supported_currency" => ["EUR", "USD"],
+                    "paymentMethod" => "TEST2",
+                ),
+            ),
+            new PaymentMethodRules(
+                array(
+                    "supported_currency" => ["EUR"],
+                    "supported_country" => ["SK", "CZ"],
+                    "paymentMethod" => "TEST3",
+                ),
+            ),
         );
-        $this->assertTrue(is_string($access_token));
+        $mocked_result = new PaymentMethodsListResponse(
+            array(
+                'payment_methods' => $mocked_methods
+            )
+        );
+        $parsed_response = array(
+            'object' => $mocked_result,
+            'response' => null
+        );
 
-        $available_methods = TatraPayPlusService::get_available_payment_methods(
-            $client,
-            $access_token,
-            TatraPayPlusService::SANDBOX,
-        );
-        $this->assertTrue(is_array($available_methods));
+        $api_instance = $this->getMockBuilder(TatraPayPlusAPIApi::class)->onlyMethods(['getMethods',])->setConstructorArgs([$this->client_id, $this->client_secret])->getMock();
+        $api_instance->method('getMethods')->will($this->returnValue($parsed_response));
 
         $test_cases = array(
-            // amount, currency, requested_methods, expected_result
-            array(10000, 'EUR', ['CARD_PAY'], true),
-            array(10, 'USD', ['QR_PAY'], false),
+            // amount, currency, country, expected_methods
+            array(100, 'EUR', null, ["TEST1", "TEST2", "TEST3"]),
+            array(10, 'USD', 'SK', ["TEST2"]),
+            array(1001, 'EUR', null, ["TEST2", "TEST3"]),
+            array(10, 'EUR', 'HUN', ["TEST1", "TEST2"]),
         );
 
-        foreach ($test_cases as [$amount, $currency, $requested_methods, $expected_result]) {
-            $is_available = TatraPayPlusService::is_currency_supported_for_specific_methods(
-                $amount,
-                $currency,
-                $available_methods,
-                $requested_methods
-            );
-            $this->assertSame($is_available, $expected_result);
+        foreach ($test_cases as [$amount, $currency, $country, $expected_methods]) {
+            $available_methods = $api_instance->getAvailableMethods($amount, $currency, $country);
+
+            foreach ($expected_methods as $expected_method) {
+                $this->assertTrue(array_key_exists($expected_method, $available_methods));
+            }
         }
     }
-    
+
     private function getPaymentPayload($total, $currency)
     {
         $order_id = uniqid();
@@ -141,7 +159,7 @@ final class Tests extends TestCase
             'post_code'       => '97405',
             'country'         => 'SK',
         ] );
-        $card_holder = 'Janko Hrasko';
+        $card_holder = 'Janko Hraško';
 
         $payLater = new PayLater( [
             'order' => new Order( [
@@ -176,20 +194,16 @@ final class Tests extends TestCase
 
     public function testInitiatePaymentCheckPaymentStatus(): void
     {
-        $client = new MagentoCurlClient(null, null);
-        $access_token = TatraPayPlusService::retrieve_access_token_with_credentials(
-            $client,
+        $accept_language = 'sk';
+        $preferred_method = null;
+        $initiate_payment_request = $this->getPaymentPayload(10, 'EUR');
+
+        $api_instance  = new TatraPayPlusAPIApi(
             $this->client_id,
             $this->client_secret,
         );
-        $config = Configuration::getDefaultConfiguration( TatraPayPlusService::SANDBOX )->setAccessToken( $access_token );
-        $apiInstance = new TatraPayPlusAPIApi( $config, $client );
-        $accept_language = 'sk';
-        $preferred_method = null;
 
-        $initiate_payment_request = $this->getPaymentPayload(10, 'EUR');
-
-        $response = $apiInstance->initiatePayment( 'http://localhost', $initiate_payment_request, $preferred_method, $accept_language );
+        $response = $api_instance->initiatePayment( 'http://localhost', $initiate_payment_request, $preferred_method, $accept_language );
 
         $this->assertFalse(is_null($response['object']));
         $this->assertFalse(is_null($response['response']));
@@ -197,15 +211,61 @@ final class Tests extends TestCase
         $payment_id = $response['object']->getPaymentId();
         $this->assertFalse(is_null($payment_id));
 
-        $status = TatraPayPlusService::check_payment_status(
-            $client,
-            (string)$access_token,
-            $payment_id,
-            TatraPayPlusService::SANDBOX
-        );
+        $status = $api_instance->getPaymentIntentStatus($payment_id);
 
         $this->assertFalse(is_null($status['object']));
         $this->assertSame($status['response']->getStatusCode(), 200);
         $this->assertSame($status['object']->getAuthorizationStatus(), PaymentIntentStatusResponse::AUTHORIZATION_STATUS__NEW);
+        $this->assertSame($status['object']->getSimpleStatus(), PaymentIntentStatusResponse::SIMPLE_STATUS_PENDING);
     }
+
+    public function testCancelPaymentIntent(): void
+    {
+        $api_instance  = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret,
+        );
+        $initiate_payment_request = $this->getPaymentPayload(10, 'EUR');
+
+        $response = $api_instance->initiatePayment('http://localhost', $initiate_payment_request);
+
+        $this->assertFalse(is_null($response['object']));
+        $this->assertFalse(is_null($response['response']));
+
+        $payment_id = $response['object']->getPaymentId();
+        $this->assertFalse(is_null($payment_id));
+
+        $response = $api_instance->cancelPaymentIntent($payment_id);
+        $this->assertSame($response['response']->getStatusCode(), 200);
+    }
+
+    public function testUpdatePaymentIntent(): void
+    {
+        $mock_response = new HttpResponse(
+            array(),
+            array(),
+            201
+        );
+
+        $mock_client = $this->getMockBuilder(CurlClient::class)->onlyMethods(['send',])->setConstructorArgs([null, false])->getMock();
+        $mock_client->method('send')->will($this->returnValue($mock_response));
+
+        $api_instance = $this->getMockBuilder(TatraPayPlusAPIApi::class)->onlyMethods(['addAuthHeader',])->setConstructorArgs([$this->client_id, $this->client_secret, $mock_client])->getMock();
+        $api_instance->method('addAuthHeader')->will($this->returnCallback('mock_addAuthHeader'));
+
+        $data = new CardPayUpdateInstruction( [
+            'operation_type' =>CardPayUpdateInstruction::OPERATION_TYPE_CHARGEBACK,
+            'amount'         => 3.0,
+        ] );
+        $response = $api_instance->updatePaymentIntent( 'TEST123', $data );
+
+        $this->assertSame($response['response']->getStatusCode(), 201);
+    }
+
+
+}
+
+function mock_addAuthHeader($headers)
+{
+    return $headers;
 }

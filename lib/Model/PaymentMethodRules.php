@@ -29,6 +29,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod',
         'amount_range_rule' => '\Tatrapayplus\TatrapayplusApiClient\Model\AmountRangeRule',
         'supported_currency' => 'string[]',
+        'supported_country' => 'string[]',
         'allowed_bank_providers' => '\Tatrapayplus\TatrapayplusApiClient\Model\Provider[]',
     ];
 
@@ -45,6 +46,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => null,
         'amount_range_rule' => null,
         'supported_currency' => null,
+        'supported_country' => null,
         'allowed_bank_providers' => null,
     ];
 
@@ -57,6 +59,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => false,
         'amount_range_rule' => false,
         'supported_currency' => false,
+        'supported_country' => true,
         'allowed_bank_providers' => false,
     ];
     /**
@@ -69,6 +72,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => 'paymentMethod',
         'amount_range_rule' => 'amountRangeRule',
         'supported_currency' => 'supportedCurrency',
+        'supported_country' => 'supportedCountry',
         'allowed_bank_providers' => 'allowedBankProviders',
     ];
     /**
@@ -80,6 +84,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => 'setPaymentMethod',
         'amount_range_rule' => 'setAmountRangeRule',
         'supported_currency' => 'setSupportedCurrency',
+        'supported_country' => 'setSupportedCountry',
         'allowed_bank_providers' => 'setAllowedBankProviders',
     ];
     /**
@@ -91,6 +96,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         'paymentMethod' => 'getPaymentMethod',
         'amount_range_rule' => 'getAmountRangeRule',
         'supported_currency' => 'getSupportedCurrency',
+        'supported_country' => 'getSupportedCountry',
         'allowed_bank_providers' => 'getAllowedBankProviders',
     ];
     /**
@@ -117,6 +123,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
         $this->setIfExists('paymentMethod', $data ?? [], null);
         $this->setIfExists('amount_range_rule', $data ?? [], null);
         $this->setIfExists('supported_currency', $data ?? [], null);
+        $this->setIfExists('supported_country', $data ?? [], null);
         $this->setIfExists('allowed_bank_providers', $data ?? [], null);
     }
 
@@ -347,6 +354,30 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
             throw new SanitizedInvalidArgumentException('non-nullable supported_currency cannot be null');
         }
         $this->container['supported_currency'] = $supported_currency;
+
+        return $this;
+    }
+
+    /**
+     * Gets supported_country
+     *
+     * @return string[]|null
+     */
+    public function getSupportedCountry()
+    {
+        return $this->container['supported_country'];
+    }
+
+    /**
+     * Sets supported_country
+     *
+     * @param string[]|null $supported_country supported_country
+     *
+     * @return self
+     */
+    public function setSupportedCountry($supported_country)
+    {
+        $this->container['supported_country'] = $supported_country;
 
         return $this;
     }

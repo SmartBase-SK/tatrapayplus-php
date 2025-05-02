@@ -13,6 +13,29 @@ use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
 {
+    public const SIMPLE_STATUS_ACCEPTED = 'ACCEPTED';
+    public const SIMPLE_STATUS_PENDING = 'PENDING';
+    public const SIMPLE_STATUS_REJECTED = 'REJECTED';
+
+    public const SIMPLE_STATUS_MAP = array(
+        PaymentMethod::PAY_LATER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [PayLaterStatus::LOAN_APPLICATION_FINISHED, PayLaterStatus::LOAN_DISBURSED],
+            self::SIMPLE_STATUS_REJECTED => [PayLaterStatus::CANCELED, PayLaterStatus::EXPIRED],
+        ),
+        PaymentMethod::CARD_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+        ),
+        PaymentMethod::BANK_TRANSFER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [BankTransferStatus::ACCC, BankTransferStatus::ACSC],
+            self::SIMPLE_STATUS_REJECTED => [BankTransferStatus::CANC, BankTransferStatus::RJCT],
+        ),
+        PaymentMethod::QR_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [QRStatus::ACCC],
+            self::SIMPLE_STATUS_REJECTED => [QRStatus::EXPIRED],
+        ),
+    );
+
     public const DISCRIMINATOR = null;
     public const AUTHORIZATION_STATUS__NEW = 'NEW';
     public const AUTHORIZATION_STATUS_PAY_METHOD_SELECTED = 'PAY_METHOD_SELECTED';
@@ -91,6 +114,7 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
         'selected_payment_method' => 'getSelectedPaymentMethod',
         'authorization_status' => 'getAuthorizationStatus',
         'status' => 'getStatus',
+        'simple_status' => 'getSimpleStatus',
     ];
     /**
      * If a nullable field gets set to null, insert it here
@@ -364,20 +388,58 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
         if (is_null($status)) {
             throw new SanitizedInvalidArgumentException('non-nullable status cannot be null');
         }
-        if ($this->getSelectedPaymentMethod() == PaymentMethod::CARD_PAY) {
+
+        $selected_method = $this->getSelectedPaymentMethod();
+
+        if ($selected_method == PaymentMethod::CARD_PAY) {
             $type = '\Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatusStructure';
             $value = ObjectSerializer::deserialize($status, $type, null);
-        } elseif ($this->getSelectedPaymentMethod() == PaymentMethod::BANK_TRANSFER) {
+        } elseif ($selected_method == PaymentMethod::BANK_TRANSFER) {
             $value = new BankTransferStatus();
             $value->setStatus($status);
-        } elseif ($this->getSelectedPaymentMethod() == PaymentMethod::PAY_LATER) {
+        } elseif ($selected_method == PaymentMethod::PAY_LATER) {
             $value = new PayLaterStatus();
             $value->setStatus($status);
-        } elseif ($this->getSelectedPaymentMethod() == PaymentMethod::QR_PAY) {
+        } elseif ($selected_method == PaymentMethod::QR_PAY) {
 	        $value = new QRStatus();
 	        $value->setStatus($status);
         }
         $this->container['status'] = $value;
+
+        $this ->setSimpleStatus(self::SIMPLE_STATUS_PENDING);
+        foreach (self::SIMPLE_STATUS_MAP[$selected_method] as $simple_status => $gateway_statuses) {
+            if (in_array($status, $gateway_statuses)) {
+                $this->setSimpleStatus($simple_status);
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Gets simple_status
+     *
+     * @return string
+     */
+    public function getSimpleStatus()
+    {
+        return $this->container['simple_status'] ?? self::SIMPLE_STATUS_PENDING;
+    }
+
+    /**
+     * Sets simple_status
+     *
+     * @param string|null $simple_status simple_status
+     *
+     * @return self
+     */
+    public function setSimpleStatus($simple_status)
+    {
+        if (is_null($simple_status)) {
+            throw new SanitizedInvalidArgumentException('non-nullable simple_status cannot be null');
+        }
+        $this->container['simple_status'] = $simple_status;
 
         return $this;
     }

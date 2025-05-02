@@ -10,6 +10,7 @@
 namespace Tatrapayplus\TatrapayplusApiClient\Model;
 
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
+use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
 
 class CardDetail implements ModelInterface, \ArrayAccess
 {
@@ -133,6 +134,10 @@ class CardDetail implements ModelInterface, \ArrayAccess
      */
     public function __construct(?array $data = null)
     {
+        if ($data['card_holder']) {
+            $data['card_holder'] = TatraPayPlusService::remove_diacritics($data['card_holder']);
+        }
+
         $this->setIfExists('card_pay_lang_override', $data ?? [], null);
         $this->setIfExists('is_pre_authorization', $data ?? [], null);
         $this->setIfExists('card_holder', $data ?? [], null);
@@ -155,7 +160,6 @@ class CardDetail implements ModelInterface, \ArrayAccess
         if (self::isNullable($variableName) && array_key_exists($variableName, $fields) && is_null($fields[$variableName])) {
             $this->openAPINullablesSetToNull[] = $variableName;
         }
-
         $this->container[$variableName] = $fields[$variableName] ?? $defaultValue;
     }
 
@@ -408,6 +412,8 @@ class CardDetail implements ModelInterface, \ArrayAccess
      */
     public function setCardHolder($card_holder)
     {
+        $card_holder = TatraPayPlusService::remove_diacritics($card_holder);
+
         if (is_null($card_holder)) {
             throw new SanitizedInvalidArgumentException('non-nullable card_holder cannot be null');
         }

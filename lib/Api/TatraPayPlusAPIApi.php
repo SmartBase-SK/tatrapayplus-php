@@ -2,6 +2,7 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient\Api;
 
+use Tatrapayplus\TatrapayplusApiClient\AccessToken;
 use Tatrapayplus\TatrapayplusApiClient\ApiException;
 use Tatrapayplus\TatrapayplusApiClient\Configuration;
 use Tatrapayplus\TatrapayplusApiClient\HeaderSelector;
@@ -12,6 +13,10 @@ use Tatrapayplus\TatrapayplusApiClient\Request;
 
 class TatraPayPlusAPIApi
 {
+    public const PRODUCTION = 0;
+    public const SANDBOX = 1;
+    public const GRANT_TYPE = 'client_credentials';
+
     /** @var string[] * */
     public const contentTypes = [
         'cancelPaymentIntent' => [
@@ -57,18 +62,49 @@ class TatraPayPlusAPIApi
     protected $hostIndex;
 
     /**
-     * @param object $client
-     * @param Configuration $config
-     * @param HeaderSelector $selector
+     * @var string
      */
+    private string $client_id;
+
+    /**
+     * @var string
+     */
+    private string $client_secret;
+
+    /**
+     * @var string
+     */
+    private string $scope;
+
+    /**
+     * @var AccessToken
+     */
+    private ?AccessToken $access_token;
+
     public function __construct(
-        Configuration $config,
-        ?object $client = null,
-        ?HeaderSelector $selector = null
+        string $client_id,
+        string $client_secret,
+        $client = null,
+        $mode = self::SANDBOX,
+        $scope = 'TATRAPAYPLUS'
     ) {
-        $this->config = $config;
-        $this->client = $client;
-        $this->headerSelector = $selector ?: new HeaderSelector();
+        $this->client_id = $client_id;
+        $this->client_secret = $client_secret;
+        $this->scope = $scope;
+        $this->access_token = null;
+
+        $this->headerSelector = new HeaderSelector();
+
+        // TODO toto este vymysliet ci sa posiela iba logger alebo cely klient
+        if (is_null($client)) {
+            $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient(
+                null,
+                false
+            );
+        } else {
+            $this->client = $client;
+        }
+        $this->config = \Tatrapayplus\TatrapayplusApiClient\Configuration::getDefaultConfiguration($mode);
     }
 
     /**
@@ -77,6 +113,24 @@ class TatraPayPlusAPIApi
     public function getConfig()
     {
         return $this->config;
+    }
+
+    public function addAuthHeader(array $headers): array
+    {
+        if (is_null($this->access_token) || $this->access_token->isExpired()) {
+            try {
+                $response = $this->token('client_credentials', $this->client_id, $this->client_secret, $this->scope);
+                $responseObj = $response['object'];
+                $this->access_token = new AccessToken($responseObj->getAccessToken(), (int) $responseObj->getExpiresIn());
+            } catch (Exception $e) {
+                error_log($e->getMessage());
+                // TODO daky error handling lepsi
+                return $headers;
+            }
+        }
+
+        $headers['Authorization'] = 'Bearer ' . $this->access_token->getAccessToken();
+        return $headers;
     }
 
     /**
@@ -127,9 +181,7 @@ class TatraPayPlusAPIApi
         );
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -213,6 +265,7 @@ class TatraPayPlusAPIApi
             $statusCode = $response->getStatusCode();
 
             if ($statusCode < 200 || $statusCode > 299) {
+                print_r($response->getBody());
                 throw new ApiException(sprintf('[%d] Error connecting to the API (%s)', $statusCode, (string) $request->getUri(), (string) $response->getBody()), $statusCode, $response->getHeaders(), (string) $response->getBody(), (string) $request);
             }
 
@@ -260,6 +313,56 @@ class TatraPayPlusAPIApi
         return json_decode(...$args);
     }
 
+    public function getAvailableMethods(
+        $total_amount = null,
+        $currency = null,
+        $country = null
+    )
+    {
+        $result = $this->getMethods();
+        $available_methods = $result['object'];
+
+        $available_methods_currencies = [];
+        foreach ($available_methods->getPaymentMethods() as $available_method) {
+            if ($available_method->getAmountRangeRule()) {
+                $amount_range_rule = [
+                    'min_amount' => $available_method->getAmountRangeRule()->getMinAmount(),
+                    'max_amount' => $available_method->getAmountRangeRule()->getMaxAmount(),
+                ];
+            } else {
+                $amount_range_rule = null;
+            }
+
+            if ($total_amount && $amount_range_rule) {
+                if ($total_amount < $amount_range_rule['min_amount'] || $total_amount > $amount_range_rule['max_amount']) {
+                    continue;
+                }
+            }
+
+            $supported_currencies = $available_method->getSupportedCurrency();
+            if ($currency && $supported_currencies) {
+                if (is_array($supported_currencies) && !in_array($currency, $supported_currencies)) {
+                    continue;
+                }
+            }
+
+            $supported_countries = $available_method->getSupportedCountry();
+            if ($country && $supported_countries) {
+                if (is_array($supported_countries) && !in_array($country, $supported_countries)) {
+                    continue;
+                }
+            }
+
+            $available_methods_currencies[$available_method->getPaymentMethod()] = [
+                'supported_currencies' => $supported_currencies,
+                'amount_range_rule' => $amount_range_rule,
+                'supported_countries' => $supported_countries,
+            ];
+        }
+
+        return $available_methods_currencies;
+    }
+
     /**
      * Operation getMethods
      *
@@ -293,9 +396,7 @@ class TatraPayPlusAPIApi
             false
         );
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -368,9 +469,7 @@ class TatraPayPlusAPIApi
         );
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -462,9 +561,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_payment_request));
         $httpBody = str_replace('\\\\n', '\\n', $httpBody);
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -568,9 +665,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($body));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -698,9 +793,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($appearance_request));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -763,9 +856,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($appearance_logo_request));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 

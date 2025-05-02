@@ -4,9 +4,6 @@ namespace Tatrapayplus\TatrapayplusApiClient;
 
 class TatraPayPlusService
 {
-    public const PRODUCTION = 0;
-    public const SANDBOX = 1;
-
     public static function remove_diacritics($string)
     {
         $pattern = '/[^0-9a-zA-Z.@_ -]/';
@@ -30,72 +27,6 @@ class TatraPayPlusService
 	    $string = str_replace( array('&' , ';', '<', '>', '|', '`' ,'\\' ), ' ', $string);
 
         return $string === '' ? null : $string;
-    }
-
-    public static function retrieve_access_token_with_credentials($client, $client_id, $client_secret, $mode = self::SANDBOX, $scopes = 'TATRAPAYPLUS')
-    {
-        $config = Configuration::getDefaultConfiguration($mode);
-
-        $apiInstance = new Api\TatraPayPlusAPIApi($config, $client);
-        $grant_type = 'client_credentials';
-        try {
-            $response = $apiInstance->token($grant_type, $client_id, $client_secret, $scopes);
-            $access_token = $response['object']->getAccessToken();
-        } catch (Exception $e) {
-            return null;
-        }
-
-        return $access_token;
-    }
-
-    public static function get_available_payment_methods($client, $access_token, $mode)
-    {
-        $config = Configuration::getDefaultConfiguration($mode)->setAccessToken($access_token);
-
-        $apiInstance = new Api\TatraPayPlusAPIApi($config, $client);
-        $result = $apiInstance->getMethods();
-        $available_methods = $result['object'];
-        $available_methods_currencies = [];
-        foreach ($available_methods->getPaymentMethods() as $available_method) {
-            if ($available_method->getAmountRangeRule()) {
-                $amount_range_rule = [
-                    'min_amount' => $available_method->getAmountRangeRule()->getMinAmount(),
-                    'max_amount' => $available_method->getAmountRangeRule()->getMaxAmount(),
-                ];
-            } else {
-                $amount_range_rule = null;
-            }
-
-            $available_methods_currencies[$available_method->getPaymentMethod()] = [
-                'supported_currencies' => $available_method->getSupportedCurrency(),
-                'amount_range_rule' => $amount_range_rule,
-            ];
-        }
-
-        return $available_methods_currencies;
-    }
-
-    public static function is_currency_supported_for_specific_methods(
-        $total_amount,
-        $currency,
-        $available_methods_currencies,
-        $specific_methods
-    ) {
-        foreach ($specific_methods as $method) {
-            if (array_key_exists($method, $available_methods_currencies)) {
-                $method_currencies = $available_methods_currencies[$method]['supported_currencies'] ?? [];
-                $amount_range = $available_methods_currencies[$method]['amount_range_rule'] ?? null;
-                if (in_array($currency, $method_currencies)) {
-                    if ($amount_range == null) {
-                        return true;
-                    } else {
-                        return $amount_range['min_amount'] <= $total_amount and $total_amount <= $amount_range['max_amount'];
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     public static function get_icons_per_method()
