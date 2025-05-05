@@ -3,16 +3,6 @@
 namespace Tatrapayplus\TatrapayplusApiClient;
 
 class CurlClient {
-    public $logger;
-
-    public function __construct( $logger, bool $enable_log ) {
-        if ( $enable_log ) {
-            $this->logger = $logger;
-        } else {
-            $this->logger = null;
-        }
-    }
-
     public function send( Request $request ) {
         $ch      = curl_init( $request->url );
         $headers = [];
@@ -47,32 +37,20 @@ class CurlClient {
         } else {
             exit( 'Unsupported request type' );
         }
-        if ( $this->logger ) {
-            $this->logger->debug( 'Request: ' . (string) $request );
-        }
 
         $response = curl_exec( $ch );
 
         if ( $response === false ) {
-            $error = curl_error( $ch );
-            curl_close( $ch );
-            if ( $this->logger ) {
-                $this->logger->debug( 'Response error: ' . (string) $error );
-            }
-
-            return $error;
+            $response = curl_error( $ch );
         }
         $http_status = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        if ( $this->logger ) {
-            $this->logger->debug( 'Response success(status: ' . $http_status . '): ' . (string) $response );
-        }
-
         curl_close( $ch );
 
         return new HttpResponse(
             $response,
             $headers,
-            $http_status
+            $http_status,
+            $request
         );
     }
 

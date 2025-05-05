@@ -406,9 +406,15 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
         }
         $this->container['status'] = $value;
 
+        if (is_string($status)) {
+            $status_to_map = $status;
+        } else {
+            $status_to_map = $value->getStatus();
+        }
+
         $this ->setSimpleStatus(self::SIMPLE_STATUS_PENDING);
         foreach (self::SIMPLE_STATUS_MAP[$selected_method] as $simple_status => $gateway_statuses) {
-            if (in_array($status, $gateway_statuses)) {
+            if (in_array($status_to_map, $gateway_statuses)) {
                 $this->setSimpleStatus($simple_status);
                 break;
             }

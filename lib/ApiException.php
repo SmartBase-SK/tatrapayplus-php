@@ -33,19 +33,28 @@ class ApiException extends \Exception
     protected $requestBody;
 
     /**
+     * Should retry be attempted
+     *
+     * @var bool
+     */
+    protected bool $retry;
+
+    /**
      * Constructor
      *
      * @param string $message Error message
      * @param int $code HTTP status code
      * @param string[]|null $responseHeaders HTTP response header
      * @param \stdClass|string|null $responseBody HTTP decoded body of the server response either as \stdClass or string
+     * @param bool $retry Should retry be attempted
      */
-    public function __construct($message = '', $code = 0, $responseHeaders = [], $responseBody = null, $requestBody = null)
+    public function __construct($message = '', $code = 0, $responseHeaders = [], $responseBody = null, $requestBody = null, $retry = false)
     {
         parent::__construct($message, $code);
         $this->responseHeaders = $responseHeaders;
         $this->responseBody = $responseBody;
         $this->requestBody = $requestBody;
+        $this->retry = $retry;
     }
 
     /**
@@ -96,4 +105,11 @@ class ApiException extends \Exception
 	public function getRequestBody(): mixed {
 		return $this->requestBody;
 	}
+
+    /**
+     * @return bool
+     */
+    public function isRetry(): bool {
+        return $this->retry;
+    }
 }

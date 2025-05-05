@@ -6,16 +6,20 @@ use Tatrapayplus\TatrapayplusApiClient\AccessToken;
 use Tatrapayplus\TatrapayplusApiClient\ApiException;
 use Tatrapayplus\TatrapayplusApiClient\Configuration;
 use Tatrapayplus\TatrapayplusApiClient\HeaderSelector;
+use Tatrapayplus\TatrapayplusApiClient\HttpResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
 use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\Request;
+use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusLogger;
 
 class TatraPayPlusAPIApi
 {
     public const PRODUCTION = 0;
     public const SANDBOX = 1;
     public const GRANT_TYPE = 'client_credentials';
+    public const RETRIES = 3;
+    public const RETRY_STATUSES = [500, 502, 503, 504];
 
     /** @var string[] * */
     public const contentTypes = [
@@ -48,6 +52,7 @@ class TatraPayPlusAPIApi
      * @var object
      */
     protected $client;
+    protected $logger;
     /**
      * @var Configuration
      */
@@ -56,10 +61,6 @@ class TatraPayPlusAPIApi
      * @var HeaderSelector
      */
     protected $headerSelector;
-    /**
-     * @var int Host index
-     */
-    protected $hostIndex;
 
     /**
      * @var string
@@ -84,7 +85,7 @@ class TatraPayPlusAPIApi
     public function __construct(
         string $client_id,
         string $client_secret,
-        $client = null,
+        $logger = null,
         $mode = self::SANDBOX,
         $scope = 'TATRAPAYPLUS'
     ) {
@@ -92,18 +93,10 @@ class TatraPayPlusAPIApi
         $this->client_secret = $client_secret;
         $this->scope = $scope;
         $this->access_token = null;
+        $this->logger = $logger;
 
         $this->headerSelector = new HeaderSelector();
-
-        // TODO toto este vymysliet ci sa posiela iba logger alebo cely klient
-        if (is_null($client)) {
-            $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient(
-                null,
-                false
-            );
-        } else {
-            $this->client = $client;
-        }
+        $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient();
         $this->config = \Tatrapayplus\TatrapayplusApiClient\Configuration::getDefaultConfiguration($mode);
     }
 
@@ -113,6 +106,11 @@ class TatraPayPlusAPIApi
     public function getConfig()
     {
         return $this->config;
+    }
+
+    public function setClient($client)
+    {
+        $this->client = $client;
     }
 
     public function addAuthHeader(array $headers): array
@@ -253,59 +251,72 @@ class TatraPayPlusAPIApi
 
     public function processRequest($request, $target_structure, $error_structure)
     {
-        try {
+        $attempts = 1;
+        do {
             try {
-                $response = $this->client->send($request);
-            } catch (RequestException $e) {
-                throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), $e->getResponse() ? $e->getResponse()->getHeaders() : null, $e->getResponse() ? (string) $e->getResponse()->getBody() : null);
-            } catch (ConnectException $e) {
-                throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), null, null);
-            }
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                print_r($response->getBody());
-                throw new ApiException(sprintf('[%d] Error connecting to the API (%s)', $statusCode, (string) $request->getUri(), (string) $response->getBody()), $statusCode, $response->getHeaders(), (string) $response->getBody(), (string) $request);
-            }
-
-            if (!is_null($target_structure)) {
-                $content = (string) $response->getBody();
-                try {
-                    $content = static::json_decode($content, false, 512, JSON_THROW_ON_ERROR);
-                } catch (\JsonException $exception) {
-                    throw new ApiException(sprintf('Error JSON decoding server response (%s)', $request->getUri()), $statusCode, $response->getHeaders(), $content);
+                $response = $this->_processRequest($request, $target_structure);
+                $this->log($response['response']);
+                return $response;
+            } catch (ApiException $e) {
+                if (!$e->isRetry() || $attempts >= self::RETRIES) {
+                    $error_obj = is_null($error_structure) ? null : ObjectSerializer::deserialize($e->getResponseBody(), $error_structure, $e->getResponseHeaders());
+                    $e->setResponseObject($error_obj);
+                    throw $e;
                 }
             }
 
-            switch ($statusCode) {
-                case 200:
-                case 201:
-                    return [
-                        'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
-                        'response' => $response,
-                    ];
-            }
+        } while ($attempts++ < self::RETRIES);
 
-            $content = $response->getBody();
+        return null;
+    }
 
-            return [
-                'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
-                'response' => $response,
-            ];
-        } catch (ApiException $e) {
-            switch ($e->getCode()) {
-                case 400:
-                    $data = ObjectSerializer::deserialize(
-                        $e->getResponseBody(),
-                        $error_structure,
-                        $e->getResponseHeaders()
-                    );
-                    $e->setResponseObject($data);
-                    break;
-            }
-            throw $e;
+    private function _processRequest($request, $target_structure)
+    {
+        try {
+            $response = $this->client->send($request);
+        } catch (RequestException $e) {
+            throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), $e->getResponse() ? $e->getResponse()->getHeaders() : null, $e->getResponse() ? (string) $e->getResponse()->getBody() : null);
+        } catch (ConnectException $e) {
+            throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), null, null);
         }
+
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode < 200 || $statusCode > 299) {
+            throw new ApiException(
+                sprintf('[%d] Error connecting to the API (%s): %s', $statusCode, $request->getUri(), $response->getBody()),
+                $statusCode,
+                $response->getHeaders(),
+                (string) $response->getBody(),
+                (string) $request,
+                retry: in_array($statusCode, self::RETRY_STATUSES)
+            );
+        }
+
+        if (!is_null($target_structure)) {
+            $content = (string) $response->getBody();
+            try {
+                $content = static::json_decode($content, false, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                throw new ApiException(sprintf('Error JSON decoding server response (%s)', $request->getUri()), $statusCode, $response->getHeaders(), $content);
+            }
+        }
+
+        switch ($statusCode) {
+            case 200:
+            case 201:
+                return [
+                    'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
+                    'response' => $response,
+                ];
+        }
+
+        $content = $response->getBody();
+
+        return [
+            'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
+            'response' => $response,
+        ];
     }
 
     public static function json_decode(...$args)
@@ -873,5 +884,12 @@ class TatraPayPlusAPIApi
             $headers,
             $httpBody
         );
+    }
+
+    public function log(HttpResponse $response, array $additional_data = null): void
+    {
+        if (!is_null($this->logger)) {
+            $this->logger->log($response, $additional_data);
+        }
     }
 }
