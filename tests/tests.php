@@ -42,7 +42,7 @@ final class Tests extends TestCase
         $this->client_secret = getenv('TATRAPAY_CLIENT_SECRET');
     }
 
-    private function getPaymentPayload($total, $currency, bool $save_card = false): InitiatePaymentRequest
+    private function getPaymentPayload(float $total, string $currency, bool $save_card = false): InitiatePaymentRequest
     {
         $order_id = uniqid();
 
@@ -101,11 +101,6 @@ final class Tests extends TestCase
             'shipping_address' => $shippingAddress,
         ] );
         if ($save_card) {
-//            $public_key_content = file_get_contents( 'ECID_PUBLIC_KEY_2023.txt' );
-//            $signed_card_id = TatraPayPlusService::generate_signed_card_id_from_cid('123', $public_key_content);
-//            $saved_card_data = new SignedCardIdObj( [
-//                'signed_card_id' => $signed_card_id,
-//            ] );
             $cardDetail->setComfortPay( new RegisterForComfortPayObj( [
                 'register_for_comfort_pay' => true,
             ] ));
@@ -118,6 +113,13 @@ final class Tests extends TestCase
             'card_detail'   => $cardDetail,
             'pay_later'     => $payLater,
         ] );
+    }
+
+    public function testGenerateSignedCardId(): void
+    {
+        $public_key_content = file_get_contents( dirname(dirname(__FILE__)) . '/tests/ECID_PUBLIC_KEY_2023.txt' );
+        $signed_card_id = TatraPayPlusAPIApi::generateSignedCardId('123', $public_key_content);
+        $this->assertTrue(is_string($signed_card_id));
     }
 
     public function testLimitLength(): void

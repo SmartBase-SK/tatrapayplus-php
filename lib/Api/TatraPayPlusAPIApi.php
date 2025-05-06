@@ -11,7 +11,7 @@ use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
 use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\Request;
-use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusLogger;
+use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
 
 class TatraPayPlusAPIApi
 {
@@ -87,7 +87,8 @@ class TatraPayPlusAPIApi
         string $client_secret,
         $logger = null,
         $mode = self::SANDBOX,
-        $scope = 'TATRAPAYPLUS'
+        $scope = 'TATRAPAYPLUS',
+        $client = null
     ) {
         $this->client_id = $client_id;
         $this->client_secret = $client_secret;
@@ -96,7 +97,11 @@ class TatraPayPlusAPIApi
         $this->logger = $logger;
 
         $this->headerSelector = new HeaderSelector();
-        $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient();
+        if (is_null($client)) {
+            $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient();
+        } else {
+            $this->client = $client;
+        }
         $this->config = \Tatrapayplus\TatrapayplusApiClient\Configuration::getDefaultConfiguration($mode);
     }
 
@@ -116,15 +121,9 @@ class TatraPayPlusAPIApi
     public function addAuthHeader(array $headers): array
     {
         if (is_null($this->access_token) || $this->access_token->isExpired()) {
-            try {
-                $response = $this->token('client_credentials', $this->client_id, $this->client_secret, $this->scope);
-                $responseObj = $response['object'];
-                $this->access_token = new AccessToken($responseObj->getAccessToken(), (int) $responseObj->getExpiresIn());
-            } catch (Exception $e) {
-                error_log($e->getMessage());
-                // TODO daky error handling lepsi
-                return $headers;
-            }
+            $response = $this->token('client_credentials', $this->client_id, $this->client_secret, $this->scope);
+            $responseObj = $response['object'];
+            $this->access_token = new AccessToken($responseObj->getAccessToken(), (int) $responseObj->getExpiresIn());
         }
 
         $headers['Authorization'] = 'Bearer ' . $this->access_token->getAccessToken();
@@ -209,8 +208,7 @@ class TatraPayPlusAPIApi
 			if (function_exists('sanitize_text_field')) {
 				$remote_addr = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 			} else {
-				// This line won't be used by WP.
-				$remote_addr = $_SERVER['REMOTE_ADDR']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$remote_addr = $_SERVER['REMOTE_ADDR'];
 			}
 		} else {
 			$remote_addr = '127.0.0.1';
@@ -884,6 +882,11 @@ class TatraPayPlusAPIApi
             $headers,
             $httpBody
         );
+    }
+
+    public static function generateSignedCardId($cid, $public_key_content)
+    {
+        return TatraPayPlusService::generate_signed_card_id_from_cid($cid, $public_key_content);
     }
 
     public function log(HttpResponse $response, array $additional_data = null): void

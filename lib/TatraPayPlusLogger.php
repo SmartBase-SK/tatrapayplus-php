@@ -24,7 +24,7 @@ class TatraPayPlusLogger
     private function _mask_header(array $header)
     {
         if (!$this->mask_sensitive_data) {
-            return $header;
+            return json_encode($header, JSON_PRETTY_PRINT);
         }
 
         $masked_headers = [];
@@ -35,13 +35,23 @@ class TatraPayPlusLogger
                 $masked_headers[$key] = $value;
             }
         }
-        return $masked_headers;
+        return json_encode($masked_headers, JSON_PRETTY_PRINT);
     }
 
     private function _mask_body($body)
     {
+        if (empty($body)) {
+            return "No body";
+        }
+
         if (!$this->mask_sensitive_data) {
             return $body;
+        }
+
+        if (is_string($body)) {
+            try {
+                $body = json_decode($body, true);
+            } catch (\Exception $e) {}
         }
 
         if (is_string($body)) {
@@ -51,9 +61,10 @@ class TatraPayPlusLogger
 
             foreach ($pairs as $key => $value) {
                 if (in_array($key, $this->mask_body_fields, true)) {
-                    $masked_pairs[$key] = $this->_mask_value((string) $value);
+                    $masked_pairs[] = $key . '=' . $this->_mask_value((string) $value);
                 } else {
-                    $masked_pairs[$key] = $value;
+                    print $value;
+                    $masked_pairs[] = $key . '=' . $value;
                 }
             }
             return implode("&", $masked_pairs);
@@ -61,11 +72,11 @@ class TatraPayPlusLogger
 
         if (is_array($body)) {
             foreach ($this->mask_body_fields as $key) {
-                if (in_array($key, $body, true)) {
+                if (array_key_exists($key, $body)) {
                     $body[$key] = $this->_mask_value((string) $body[$key]);
                 }
             }
-            return $body;
+            return json_encode($body, JSON_PRETTY_PRINT);
         }
 
         return (string) $body;
@@ -79,9 +90,9 @@ class TatraPayPlusLogger
         $request_data = $this->_mask_body($request->getBody());
         $headers = $this->_mask_header($request->getHeaders());
 
-        $this->writeLine(printf('INFO [%s] [INFO] Request:', $date));
-        $this->writeLine(printf('Method: %s', $request->getMethod()));
-        $this->writeLine(printf('URL: %s', $request->getUrl()));
+        $this->writeLine(sprintf('INFO [%s] [INFO] Request:', $date));
+        $this->writeLine(sprintf('Method: %s', $request->getMethod()));
+        $this->writeLine(sprintf('URL: %s', $request->getUri()));
         $this->writeLine('Headers:');
         $this->writeLine(print_r($headers, true));
         if ($request_data) {
@@ -89,7 +100,7 @@ class TatraPayPlusLogger
             $this->writeLine((string) $request_data);
         }
 
-        $this->writeLine(printf('INFO [%s] [INFO] Response status code: %s):', $date, $response->getStatusCode()));
+        $this->writeLine(sprintf('INFO [%s] [INFO] Response (status code: %s):', $date, $response->getStatusCode()));
 
         $response_body = $response->getBody();
         if (is_array($response_body)) {
@@ -102,7 +113,7 @@ class TatraPayPlusLogger
 
     public function writeLine(string $line): void
     {
-        print $line;
-//        throw new Exception('writeLine not implemented');
+        print $line . "\n";
+//        throw new Exception('TatraPayPlusLogger subclass must implement write_line()');
     }
 }
