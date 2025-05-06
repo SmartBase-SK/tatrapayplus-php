@@ -26,6 +26,7 @@ use Tatrapayplus\TatrapayplusApiClient\Model\OrderItem;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetail;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetailLangUnit;
 use Tatrapayplus\TatrapayplusApiClient\CurlClient;
+use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusLogger;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
 use Tatrapayplus\TatrapayplusApiClient\Api\TatraPayPlusAPIApi;
 
@@ -464,9 +465,39 @@ final class Tests extends TestCase
         }
         $this->assertTrue($error_thrown);
     }
+
+    public function testLogger()
+    {
+        $logger = new TestLogger();
+        $api_instance = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret,
+            $logger,
+            mode: TatraPayPlusAPIApi::SANDBOX
+        );
+
+        $api_instance->getAvailableMethods();
+        // 7 - token operation, 9 - getMethods operation
+        $this->assertSame(16, count($logger->lines));
+    }
 }
 
 function mock_addAuthHeader($headers)
 {
     return $headers;
+}
+
+
+class TestLogger extends TatraPayPlusLogger
+{
+    public array $lines = [];
+
+    public array $mask_body_fields = [
+        "access_token",
+    ];
+
+    public function writeLine(string $line): void
+    {
+        $this->lines[] = $line;
+    }
 }
