@@ -440,11 +440,8 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
      *
      * @return self
      */
-    public function setSimpleStatus($simple_status)
+    public function setSimpleStatus(string|null $simple_status)
     {
-        if (is_null($simple_status)) {
-            throw new SanitizedInvalidArgumentException('non-nullable simple_status cannot be null');
-        }
         $this->container['simple_status'] = $simple_status;
 
         return $this;

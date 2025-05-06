@@ -52,6 +52,10 @@ class TatraPayPlusAPIApi
      * @var object
      */
     protected $client;
+
+    /**
+     * @var object
+     */
     protected $logger;
     /**
      * @var Configuration
@@ -85,10 +89,10 @@ class TatraPayPlusAPIApi
     public function __construct(
         string $client_id,
         string $client_secret,
-        $logger = null,
-        $mode = self::SANDBOX,
-        $scope = 'TATRAPAYPLUS',
-        $client = null
+        object|null $logger = null,
+        int $mode = self::SANDBOX,
+        string $scope = 'TATRAPAYPLUS',
+        object|null $client = null
     ) {
         $this->client_id = $client_id;
         $this->client_secret = $client_secret;
@@ -113,7 +117,7 @@ class TatraPayPlusAPIApi
         return $this->config;
     }
 
-    public function setClient($client)
+    public function setClient(object|null $client): void
     {
         $this->client = $client;
     }
@@ -323,10 +327,10 @@ class TatraPayPlusAPIApi
     }
 
     public function getAvailableMethods(
-        $total_amount = null,
-        $currency = null,
-        $country = null
-    )
+        float|null $total_amount = null,
+        string|null $currency = null,
+        string|null $country = null
+    ): array
     {
         $result = $this->getMethods();
         $available_methods = $result['object'];
@@ -884,7 +888,7 @@ class TatraPayPlusAPIApi
         );
     }
 
-    public static function generateSignedCardId($cid, $public_key_content)
+    public static function generateSignedCardId(string $cid, string $public_key_content): string
     {
         return TatraPayPlusService::generate_signed_card_id_from_cid($cid, $public_key_content);
     }
