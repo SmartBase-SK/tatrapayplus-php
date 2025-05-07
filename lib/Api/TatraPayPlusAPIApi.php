@@ -125,7 +125,7 @@ class TatraPayPlusAPIApi
     public function addAuthHeader(array $headers): array
     {
         if (is_null($this->access_token) || $this->access_token->isExpired()) {
-            $response = $this->token('client_credentials', $this->client_id, $this->client_secret, $this->scope);
+            $response = $this->token(self::GRANT_TYPE, $this->client_id, $this->client_secret, $this->scope);
             $responseObj = $response['object'];
             $this->access_token = new AccessToken($responseObj->getAccessToken(), (int) $responseObj->getExpiresIn());
         }
@@ -572,6 +572,87 @@ class TatraPayPlusAPIApi
         );
 
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_payment_request));
+        $httpBody = str_replace('\\\\n', '\\n', $httpBody);
+        // this endpoint requires OAuth (access token)
+        $headers = $this->addAuthHeader($headers);
+
+        $defaultHeaders = $this->getDefaultHeaders();
+
+        $headers = array_merge(
+            $defaultHeaders,
+            $headerParams,
+            $headers
+        );
+
+        $operationHost = $this->config->getHost();
+        $query = ObjectSerializer::buildQuery($queryParams);
+
+        return new Request(
+            'POST',
+            $operationHost . $resourcePath . ($query ? "?{$query}" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    /**
+     * Operation initiateDirectTransaction
+     *
+     * Initiate direct payment intent
+     *
+     * @param string $redirect_uri URI of the client application endpoint, where the user shall be redirected to after payment process. URI has to be registered in Developer portal (required)
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest $initiate_transaction_request
+     *
+     * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
+     *
+     * @throws SanitizedInvalidArgumentException
+     * @throws ApiException on non-2xx response or if the response body is not in the expected format
+     */
+    public function initiateDirectTransaction($redirect_uri, $initiate_transaction_request)
+    {
+        $request = $this->initiateDirectTransactionRequest($redirect_uri, $initiate_transaction_request);
+
+        return $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+    }
+
+    /**
+     * Create request for operation 'initiateDirectTransactionRequest'
+     *
+     * @param string $redirect_uri URI of the client application endpoint, where the user shall be redirected to after payment process. URI has to be registered in Developer portal (required)
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest $initiate_transaction_request
+     *
+     * @return Request
+     *
+     * @throws SanitizedInvalidArgumentException
+     */
+    public function initiateDirectTransactionRequest($redirect_uri, $initiate_transaction_request)
+    {
+        // verify the required parameter 'redirect_uri' is set
+        if ($redirect_uri === null || (is_array($redirect_uri) && count($redirect_uri) === 0)) {
+            throw new SanitizedInvalidArgumentException('Missing the required parameter $redirect_uri when calling initiateDirectTransactionRequest');
+        }
+
+        // verify the required parameter 'initiate_payment_request' is set
+        if ($initiate_transaction_request === null || (is_array($initiate_transaction_request) && count($initiate_transaction_request) === 0)) {
+            throw new SanitizedInvalidArgumentException('Missing the required parameter $initiate_transaction_request when calling initiateDirectTransactionRequest');
+        }
+
+        $resourcePath = '/v1/payments-direct';
+        $queryParams = [];
+        $headerParams = [];
+
+        // header params
+        if ($redirect_uri !== null) {
+            $headerParams['Redirect-URI'] = ObjectSerializer::toHeaderValue($redirect_uri);
+        }
+
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json'],
+            self::contentTypes['initiatePayment'][0],
+            false
+        );
+
+        $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_transaction_request));
         $httpBody = str_replace('\\\\n', '\\n', $httpBody);
         // this endpoint requires OAuth (access token)
         $headers = $this->addAuthHeader($headers);

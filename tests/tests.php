@@ -7,6 +7,9 @@ use Tatrapayplus\TatrapayplusApiClient\Model\AppearanceLogoRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\AppearanceRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\CardPayUpdateInstruction;
 use Tatrapayplus\TatrapayplusApiClient\Model\ColorAttribute;
+use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData;
+use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionTDSData;
+use Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\AmountRangeRule;
@@ -16,6 +19,7 @@ use Tatrapayplus\TatrapayplusApiClient\Model\BasePayment;
 use Tatrapayplus\TatrapayplusApiClient\Model\Amount;
 use Tatrapayplus\TatrapayplusApiClient\Model\E2e;
 use Tatrapayplus\TatrapayplusApiClient\Model\RegisterForComfortPayObj;
+use Tatrapayplus\TatrapayplusApiClient\Model\Token;
 use Tatrapayplus\TatrapayplusApiClient\Model\UserData;
 use Tatrapayplus\TatrapayplusApiClient\Model\BankTransfer;
 use Tatrapayplus\TatrapayplusApiClient\Model\Address;
@@ -42,6 +46,47 @@ final class Tests extends TestCase
         $this->client_secret = getenv("TATRAPAY_CLIENT_SECRET");
     }
 
+    private function getDirectTransactionPayload(
+        float $total,
+        string $currency,
+    ): InitiateDirectTransactionRequest
+    {
+        $address = new Address([
+            "street_name" => "TestStreet",
+            "building_number" => "12",
+            "town_name" => "Town",
+            "post_code" => "97405",
+            "country" => "SK",
+        ]);
+
+        $request_data = new InitiateDirectTransactionRequest([
+            "amount" => new Amount([
+                "amount_value" => $total,
+                "currency" => $currency,
+            ]),
+            "is_pre_authorization" => true,
+            "end_to_end" => new E2e([
+                "variable_symbol" => "123",
+            ]),
+            "tds_data" => new DirectTransactionTDSData([
+                "card_holder" => "Janko Hraško",
+                "email" => "janko.hrasko@example.com",
+                "billing_address" => $address,
+                "shipping_address" => $address,
+            ]),
+            "ipsp_data" => new DirectTransactionIPSPData([
+                "sub_merchant_id" => "12345",
+                "name" => "Test 123",
+                "location" => "Test 123",
+                "country" => "SK",
+            ]),
+            "token" => new Token([
+                "google_pay_token" => "ABC12345"
+            ]),
+        ]);
+        return $request_data;
+    }
+
     private function getPaymentPayload(
         float $total,
         string $currency,
@@ -62,7 +107,7 @@ final class Tests extends TestCase
         $userData = new UserData([
             "first_name" => "Janko",
             "last_name" => "Hrasko",
-            "email" => "janko.hrasko@test.sk",
+            "email" => "janko.hrasko@example.com",
         ]);
 
         $bankTransfer = new BankTransfer();
@@ -479,6 +524,43 @@ final class Tests extends TestCase
         $api_instance->getAvailableMethods();
         // 7 - token operation, 9 - getMethods operation
         $this->assertSame(16, count($logger->lines));
+    }
+
+    public function testInitiateDirectTransactionMocked(): void
+    {
+        $mock_response_body = json_encode(
+            array(
+                "paymentId" => "123456789",
+                "redirectFormHtml" => "custom HTML"
+            )
+        );
+        $mock_response = new HttpResponse($mock_response_body, [], 201);
+        $mock_client = $this->getMockBuilder(CurlClient::class)
+            ->onlyMethods(["send"])
+            ->getMock();
+        $mock_client->method("send")->will($this->returnValue($mock_response));
+
+        $api_instance = $this->getMockBuilder(TatraPayPlusAPIApi::class)
+            ->onlyMethods(["addAuthHeader"])
+            ->setConstructorArgs([$this->client_id, $this->client_secret])
+            ->getMock();
+        $api_instance
+            ->method("addAuthHeader")
+            ->will($this->returnCallback("mock_addAuthHeader"));
+        $api_instance->setClient($mock_client);
+
+        $request_data = $this->getDirectTransactionPayload(10, "EUR");
+
+        $response = $api_instance->initiateDirectTransaction(
+            "http://localhost",
+            $request_data,
+        );
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertFalse(is_null($response["response"]));
+
+        $this->assertSame("123456789", $response["object"]->getPaymentId());
+        $this->assertSame("custom HTML", $response["object"]->getRedirectFormHtml());
     }
 }
 
