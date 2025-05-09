@@ -32,6 +32,10 @@ class TatraPayPlusService
             self::SIMPLE_STATUS_ACCEPTED => [QRStatus::ACCC],
             self::SIMPLE_STATUS_REJECTED => [QRStatus::EXPIRED],
         ),
+        PaymentMethod::DIRECT_API => array(
+            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+        ),
     );
 
     public static function remove_diacritics($string)

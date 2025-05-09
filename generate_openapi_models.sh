@@ -18,10 +18,9 @@ rm -rf ./tmp-openapi
 echo "Adding custom Model classes from backup..."
 cp ./lib/ModelBackup/TokenSuccessResponseType.php ./lib/Model
 cp ./lib/ModelBackup/QRStatus.php ./lib/Model
-cp ./lib/ModelBackup/PaymentIntentStatusResponse.php ./lib/Model
-cp ./lib/ModelBackup/PaymentMethod.php ./lib/Model
 cp ./lib/ModelBackup/PaymentMethodRules.php ./lib/Model
 
+echo "********************************"
 echo "Verify new Model files by running tests -> phpunit --bootstrap vendor/autoload.php tests/tests.php"
 echo "Ensure env variables TATRAPAY_CLIENT_ID and TATRAPAY_CLIENT_SECRET are set before running tests"
 echo "If successful, remove old Model files backup (dir ./lib/ModelBackup)"

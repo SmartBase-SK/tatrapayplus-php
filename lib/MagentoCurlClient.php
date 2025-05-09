@@ -6,7 +6,7 @@ class MagentoCurlClient {
 	public $logger;
 
 	public function __construct( $logger, $scopeConfig ) {
-		if ( !is_null($scopeConfig) && $scopeConfig->getValue('payment/tatrapayplus/enable_debug_log') == "1" ) {
+		if ( $scopeConfig->getValue('payment/tatrapayplus/enable_debug_log') == "1" ) {
 			$this->logger = $logger;
 		} else {
 			$this->logger = null;
