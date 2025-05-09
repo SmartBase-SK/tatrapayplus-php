@@ -183,16 +183,6 @@ final class Tests extends TestCase
         $this->assertSame($result, "test");
     }
 
-    public function testRemoveDiacritics(): void
-    {
-        $initiate_payment_request = $this->getPaymentPayload(10, "EUR");
-
-        $this->assertSame(
-            $initiate_payment_request->getCardDetail()->getCardHolder(),
-            "Janko Hrasko"
-        );
-    }
-
     public function testGetAvailablePaymentMethods(): void
     {
         $api_instance = new TatraPayPlusAPIApi(
@@ -296,7 +286,7 @@ final class Tests extends TestCase
         $payment_id = $response["object"]->getPaymentId();
         $this->assertFalse(is_null($payment_id));
 
-        $response = $api_instance->getPaymentIntentStatus($payment_id);
+        [$simple_status, $response] = $api_instance->getPaymentIntentStatus($payment_id);
 
         $this->assertFalse(is_null($response["object"]));
         $this->assertSame($response["response"]->getStatusCode(), 200);
@@ -305,8 +295,8 @@ final class Tests extends TestCase
             PaymentIntentStatusResponse::AUTHORIZATION_STATUS__NEW
         );
         $this->assertSame(
-            $response["object"]->getSimpleStatus(),
-            PaymentIntentStatusResponse::SIMPLE_STATUS_PENDING
+            $simple_status,
+            TatraPayPlusService::SIMPLE_STATUS_PENDING
         );
     }
 
@@ -409,13 +399,13 @@ final class Tests extends TestCase
             ->will($this->returnCallback("mock_addAuthHeader"));
         $api_instance->setClient($mock_client);
 
-        $response = $api_instance->getPaymentIntentStatus("12345");
+        [$simple_status, $response] = $api_instance->getPaymentIntentStatus("12345");
 
         $this->assertFalse(is_null($response["object"]));
         $this->assertSame($response["response"]->getStatusCode(), 201);
         $this->assertSame(
-            $response["object"]->getSimpleStatus(),
-            PaymentIntentStatusResponse::SIMPLE_STATUS_ACCEPTED
+            $simple_status,
+            TatraPayPlusService::SIMPLE_STATUS_ACCEPTED
         );
         $status_obj = $response["object"]->getStatus();
         $this->assertSame($status_obj->getComfortPay()->getCid(), "123");

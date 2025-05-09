@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * DirectTransactionTaskStatusResponse
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * DirectTransactionTaskStatusResponse Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class DirectTransactionTaskStatusResponse implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = 'directTransactionTaskStatusResponse';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        'transaction_id' => 'string',
+        'status' => '\Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionStatus',
+        'transaction_data' => '\Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionData'
     ];
 
     /**
@@ -68,7 +70,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        'transaction_id' => '$uuid',
+        'status' => null,
+        'transaction_data' => null
     ];
 
     /**
@@ -77,7 +81,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        'transaction_id' => false,
+        'status' => false,
+        'transaction_data' => false
     ];
 
     /**
@@ -166,7 +172,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        'transaction_id' => 'transactionId',
+        'status' => 'status',
+        'transaction_data' => 'transactionData'
     ];
 
     /**
@@ -175,7 +183,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        'transaction_id' => 'setTransactionId',
+        'status' => 'setStatus',
+        'transaction_data' => 'setTransactionData'
     ];
 
     /**
@@ -184,7 +194,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        'transaction_id' => 'getTransactionId',
+        'status' => 'getStatus',
+        'transaction_data' => 'getTransactionData'
     ];
 
     /**
@@ -244,7 +256,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
+        $this->setIfExists('transaction_id', $data ?? [], null);
+        $this->setIfExists('status', $data ?? [], null);
+        $this->setIfExists('transaction_data', $data ?? [], null);
     }
 
     /**
@@ -290,28 +304,82 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
 
 
     /**
-     * Gets token
+     * Gets transaction_id
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
+     * @return string|null
      */
-    public function getToken()
+    public function getTransactionId()
     {
-        return $this->container['token'];
+        return $this->container['transaction_id'];
     }
 
     /**
-     * Sets token
+     * Sets transaction_id
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
+     * @param string|null $transaction_id This identification of the transaction, available only in state OK and FAIL
      *
      * @return self
      */
-    public function setToken($token)
+    public function setTransactionId($transaction_id)
     {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
+        if (is_null($transaction_id)) {
+            throw new \InvalidArgumentException('non-nullable transaction_id cannot be null');
         }
-        $this->container['token'] = $token;
+        $this->container['transaction_id'] = $transaction_id;
+
+        return $this;
+    }
+
+    /**
+     * Gets status
+     *
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionStatus|null
+     */
+    public function getStatus()
+    {
+        return $this->container['status'];
+    }
+
+    /**
+     * Sets status
+     *
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionStatus|null $status status
+     *
+     * @return self
+     */
+    public function setStatus($status)
+    {
+        if (is_null($status)) {
+            throw new \InvalidArgumentException('non-nullable status cannot be null');
+        }
+        $this->container['status'] = $status;
+
+        return $this;
+    }
+
+    /**
+     * Gets transaction_data
+     *
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionData|null
+     */
+    public function getTransactionData()
+    {
+        return $this->container['transaction_data'];
+    }
+
+    /**
+     * Sets transaction_data
+     *
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionData|null $transaction_data transaction_data
+     *
+     * @return self
+     */
+    public function setTransactionData($transaction_data)
+    {
+        if (is_null($transaction_data)) {
+            throw new \InvalidArgumentException('non-nullable transaction_data cannot be null');
+        }
+        $this->container['transaction_data'] = $transaction_data;
 
         return $this;
     }

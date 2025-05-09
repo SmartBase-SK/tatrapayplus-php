@@ -2,13 +2,13 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient\Api;
 
+use InvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\AccessToken;
 use Tatrapayplus\TatrapayplusApiClient\ApiException;
 use Tatrapayplus\TatrapayplusApiClient\Configuration;
 use Tatrapayplus\TatrapayplusApiClient\HeaderSelector;
 use Tatrapayplus\TatrapayplusApiClient\HttpResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
-use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\Request;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
@@ -159,13 +159,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function cancelPaymentIntentRequest($payment_id)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling cancelPaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling cancelPaymentIntent');
         }
 
         $resourcePath = '/v1/payments/{payment-id}';
@@ -383,7 +383,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodsListResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function getMethods()
@@ -398,7 +398,7 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getMethodsRequest()
     {
@@ -434,16 +434,19 @@ class TatraPayPlusAPIApi
      *
      * @param string $payment_id payment intent identifier (required)
      *
-     * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
+     * @return array of simple_status and \Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function getPaymentIntentStatus($payment_id)
     {
         $request = $this->getPaymentIntentStatusRequest($payment_id);
 
-        return $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+        $response = $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+        $simple_status = TatraPayPlusService::map_simple_status($response);
+
+        return [$simple_status, $response];
     }
 
     /**
@@ -453,13 +456,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getPaymentIntentStatusRequest($payment_id)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling getPaymentIntentStatus');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling getPaymentIntentStatus');
         }
 
         $resourcePath = '/v1/payments/{payment-id}/status';
@@ -514,7 +517,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function initiatePayment($redirect_uri, $initiate_payment_request, $preferred_method = null, $accept_language = 'sk')
@@ -534,18 +537,18 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function initiatePaymentRequest($redirect_uri, $initiate_payment_request, $preferred_method = null, $accept_language = 'sk')
     {
         // verify the required parameter 'redirect_uri' is set
         if ($redirect_uri === null || (is_array($redirect_uri) && count($redirect_uri) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $redirect_uri when calling initiatePayment');
+            throw new InvalidArgumentException('Missing the required parameter $redirect_uri when calling initiatePayment');
         }
 
         // verify the required parameter 'initiate_payment_request' is set
         if ($initiate_payment_request === null || (is_array($initiate_payment_request) && count($initiate_payment_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $initiate_payment_request when calling initiatePayment');
+            throw new InvalidArgumentException('Missing the required parameter $initiate_payment_request when calling initiatePayment');
         }
 
         $resourcePath = '/v1/payments';
@@ -570,6 +573,8 @@ class TatraPayPlusAPIApi
             self::contentTypes['initiatePayment'][0],
             false
         );
+
+        $initiate_payment_request = TatraPayPlusService::remove_card_holder_diacritics($initiate_payment_request);
 
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_payment_request));
         $httpBody = str_replace('\\\\n', '\\n', $httpBody);
@@ -605,7 +610,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function initiateDirectTransaction($redirect_uri, $initiate_transaction_request)
@@ -623,18 +628,18 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function initiateDirectTransactionRequest($redirect_uri, $initiate_transaction_request)
     {
         // verify the required parameter 'redirect_uri' is set
         if ($redirect_uri === null || (is_array($redirect_uri) && count($redirect_uri) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $redirect_uri when calling initiateDirectTransactionRequest');
+            throw new InvalidArgumentException('Missing the required parameter $redirect_uri when calling initiateDirectTransactionRequest');
         }
 
         // verify the required parameter 'initiate_payment_request' is set
         if ($initiate_transaction_request === null || (is_array($initiate_transaction_request) && count($initiate_transaction_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $initiate_transaction_request when calling initiateDirectTransactionRequest');
+            throw new InvalidArgumentException('Missing the required parameter $initiate_transaction_request when calling initiateDirectTransactionRequest');
         }
 
         $resourcePath = '/v1/payments-direct';
@@ -652,6 +657,7 @@ class TatraPayPlusAPIApi
             false
         );
 
+        $initiate_transaction_request = TatraPayPlusService::remove_card_holder_diacritics($initiate_transaction_request);
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_transaction_request));
         $httpBody = str_replace('\\\\n', '\\n', $httpBody);
         // this endpoint requires OAuth (access token)
@@ -706,7 +712,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function updatePaymentIntent($payment_id, $body)
@@ -724,18 +730,18 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function updatePaymentIntentRequest($payment_id, $body)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling updatePaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling updatePaymentIntent');
         }
 
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $body when calling updatePaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $body when calling updatePaymentIntent');
         }
 
         $resourcePath = '/v1/payments/{payment-id}';
@@ -791,22 +797,22 @@ class TatraPayPlusAPIApi
     {
         // verify the required parameter '$grant_type' is set
         if ($grant_type === null || (is_array($grant_type) && count($grant_type) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $grant_type when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $grant_type when calling tokenRequest');
         }
 
         // verify the required parameter '$client_id' is set
         if ($client_id === null || (is_array($client_id) && count($client_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $client_id when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $client_id when calling tokenRequest');
         }
 
         // verify the required parameter '$client_secret' is set
         if ($client_secret === null || (is_array($client_secret) && count($client_secret) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $client_secret when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $client_secret when calling tokenRequest');
         }
 
         // verify the required parameter '$scope' is set
         if ($scope === null || (is_array($scope) && count($scope) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $scope when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $scope when calling tokenRequest');
         }
 
         $resourcePath = '/auth/oauth/v2/token';
@@ -850,7 +856,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function setAppearance($appearance_request)
@@ -867,13 +873,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setAppearanceRequest($appearance_request)
     {
         // verify the required parameter 'appearance_request' is set
         if ($appearance_request === null || (is_array($appearance_request) && count($appearance_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $appearance_request when calling setAppearance');
+            throw new InvalidArgumentException('Missing the required parameter $appearance_request when calling setAppearance');
         }
 
         $resourcePath = '/v1/appearances';
@@ -915,7 +921,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function setLogo($appearance_logo_request)
@@ -930,13 +936,13 @@ class TatraPayPlusAPIApi
      *
      * @param \Tatrapayplus\TatrapayplusApiClient\Model\AppearanceLogoRequest $appearance_logo_request (required)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setLogoRequest($appearance_logo_request)
     {
         // verify the required parameter 'appearance_logo_request' is set
         if ($appearance_logo_request === null || (is_array($appearance_logo_request) && count($appearance_logo_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $appearance_logo_request when calling setLogo');
+            throw new InvalidArgumentException('Missing the required parameter $appearance_logo_request when calling setLogo');
         }
 
         $resourcePath = '/v1/appearances/logo';

@@ -1,6 +1,6 @@
 <?php
 /**
- * Status
+ * DirectTransactionStatus
  *
  * PHP version 8.1
  *
@@ -30,26 +30,23 @@ namespace Tatrapayplus\TatrapayplusApiClient\Model;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Status Class Doc Comment
+ * DirectTransactionStatus Class Doc Comment
  *
  * @category Class
- * @description Status of calculation
  * @package  Tatrapayplus\TatrapayplusApiClient
  * @author   OpenAPI Generator team
  * @link     https://openapi-generator.tech
  */
-class Status
+class DirectTransactionStatus
 {
     /**
      * Possible values of this enum
      */
-    public const OFFER = 'OFFER';
+    public const OK = 'OK';
 
-    public const NO_OFFER = 'NO_OFFER';
+    public const FAIL = 'FAIL';
 
-    public const OPEN = 'OPEN';
-
-    public const PROCESSING = 'PROCESSING';
+    public const TDS_AUTH_REQUIRED = 'TDS_AUTH_REQUIRED';
 
     /**
      * Gets allowable values of the enum
@@ -58,10 +55,9 @@ class Status
     public static function getAllowableEnumValues()
     {
         return [
-            self::OFFER,
-            self::NO_OFFER,
-            self::OPEN,
-            self::PROCESSING
+            self::OK,
+            self::FAIL,
+            self::TDS_AUTH_REQUIRED
         ];
     }
 }

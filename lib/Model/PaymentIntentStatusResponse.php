@@ -328,7 +328,7 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
     public function setSelectedPaymentMethod($selected_payment_method)
     {
         if (is_null($selected_payment_method)) {
-            throw new SanitizedInvalidArgumentException('non-nullable selected_payment_method cannot be null');
+            throw new InvalidArgumentException('non-nullable selected_payment_method cannot be null');
         }
         $this->container['selected_payment_method'] = $selected_payment_method;
 
@@ -355,11 +355,11 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
     public function setAuthorizationStatus($authorization_status)
     {
         if (is_null($authorization_status)) {
-            throw new SanitizedInvalidArgumentException('non-nullable authorization_status cannot be null');
+            throw new InvalidArgumentException('non-nullable authorization_status cannot be null');
         }
         $allowedValues = $this->getAuthorizationStatusAllowableValues();
         if (!in_array($authorization_status, $allowedValues, true)) {
-            throw new SanitizedInvalidArgumentException(sprintf("Invalid value '%s' for 'authorization_status', must be one of '%s'", $authorization_status, implode("', '", $allowedValues)));
+            throw new InvalidArgumentException(sprintf("Invalid value '%s' for 'authorization_status', must be one of '%s'", $authorization_status, implode("', '", $allowedValues)));
         }
         $this->container['authorization_status'] = $authorization_status;
 
@@ -386,7 +386,7 @@ class PaymentIntentStatusResponse implements ModelInterface, \ArrayAccess
     public function setStatus($status)
     {
         if (is_null($status)) {
-            throw new SanitizedInvalidArgumentException('non-nullable status cannot be null');
+            throw new InvalidArgumentException('non-nullable status cannot be null');
         }
 
         $selected_method = $this->getSelectedPaymentMethod();

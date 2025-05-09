@@ -1,0 +1,7 @@
+{
+  "apiPackage": "Tatrapayplus",
+  "invokerPackage": "Tatrapayplus\\TatrapayplusApiClient",
+  "developerOrganization": "SmartBase",
+  "developerOrganizationUrl": "https://github.com/SmartBase-SK",
+  "hideGenerationTimestamp" : true
+}

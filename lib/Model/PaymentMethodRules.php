@@ -297,7 +297,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
     public function setPaymentMethod($paymentMethod)
     {
         if (is_null($paymentMethod)) {
-            throw new SanitizedInvalidArgumentException('non-nullable paymentMethod cannot be null');
+            throw new InvalidArgumentException('non-nullable paymentMethod cannot be null');
         }
         $this->container['paymentMethod'] = $paymentMethod;
 
@@ -324,7 +324,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
     public function setAmountRangeRule($amount_range_rule)
     {
         if (is_null($amount_range_rule)) {
-            throw new SanitizedInvalidArgumentException('non-nullable amount_range_rule cannot be null');
+            throw new InvalidArgumentException('non-nullable amount_range_rule cannot be null');
         }
         $this->container['amount_range_rule'] = $amount_range_rule;
 
@@ -351,7 +351,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
     public function setSupportedCurrency($supported_currency)
     {
         if (is_null($supported_currency)) {
-            throw new SanitizedInvalidArgumentException('non-nullable supported_currency cannot be null');
+            throw new InvalidArgumentException('non-nullable supported_currency cannot be null');
         }
         $this->container['supported_currency'] = $supported_currency;
 
@@ -402,7 +402,7 @@ class PaymentMethodRules implements ModelInterface, \ArrayAccess
     public function setAllowedBankProviders($allowed_bank_providers)
     {
         if (is_null($allowed_bank_providers)) {
-            throw new SanitizedInvalidArgumentException('non-nullable allowed_bank_providers cannot be null');
+            throw new InvalidArgumentException('non-nullable allowed_bank_providers cannot be null');
         }
         $this->container['allowed_bank_providers'] = $allowed_bank_providers;
 

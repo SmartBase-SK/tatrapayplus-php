@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * ApplePayTokenTokenHeader
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * ApplePayTokenTokenHeader Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class ApplePayTokenTokenHeader implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = 'applePayToken_token_header';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        'ephemeral_public_key' => 'string',
+        'public_key_hash' => 'string',
+        'transaction_id' => 'string'
     ];
 
     /**
@@ -68,7 +70,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        'ephemeral_public_key' => null,
+        'public_key_hash' => null,
+        'transaction_id' => null
     ];
 
     /**
@@ -77,7 +81,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        'ephemeral_public_key' => false,
+        'public_key_hash' => false,
+        'transaction_id' => false
     ];
 
     /**
@@ -166,7 +172,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        'ephemeral_public_key' => 'ephemeralPublicKey',
+        'public_key_hash' => 'publicKeyHash',
+        'transaction_id' => 'transactionId'
     ];
 
     /**
@@ -175,7 +183,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        'ephemeral_public_key' => 'setEphemeralPublicKey',
+        'public_key_hash' => 'setPublicKeyHash',
+        'transaction_id' => 'setTransactionId'
     ];
 
     /**
@@ -184,7 +194,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        'ephemeral_public_key' => 'getEphemeralPublicKey',
+        'public_key_hash' => 'getPublicKeyHash',
+        'transaction_id' => 'getTransactionId'
     ];
 
     /**
@@ -244,7 +256,9 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
+        $this->setIfExists('ephemeral_public_key', $data ?? [], null);
+        $this->setIfExists('public_key_hash', $data ?? [], null);
+        $this->setIfExists('transaction_id', $data ?? [], null);
     }
 
     /**
@@ -290,28 +304,82 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
 
 
     /**
-     * Gets token
+     * Gets ephemeral_public_key
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
+     * @return string|null
      */
-    public function getToken()
+    public function getEphemeralPublicKey()
     {
-        return $this->container['token'];
+        return $this->container['ephemeral_public_key'];
     }
 
     /**
-     * Sets token
+     * Sets ephemeral_public_key
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
+     * @param string|null $ephemeral_public_key ephemeral_public_key
      *
      * @return self
      */
-    public function setToken($token)
+    public function setEphemeralPublicKey($ephemeral_public_key)
     {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
+        if (is_null($ephemeral_public_key)) {
+            throw new \InvalidArgumentException('non-nullable ephemeral_public_key cannot be null');
         }
-        $this->container['token'] = $token;
+        $this->container['ephemeral_public_key'] = $ephemeral_public_key;
+
+        return $this;
+    }
+
+    /**
+     * Gets public_key_hash
+     *
+     * @return string|null
+     */
+    public function getPublicKeyHash()
+    {
+        return $this->container['public_key_hash'];
+    }
+
+    /**
+     * Sets public_key_hash
+     *
+     * @param string|null $public_key_hash public_key_hash
+     *
+     * @return self
+     */
+    public function setPublicKeyHash($public_key_hash)
+    {
+        if (is_null($public_key_hash)) {
+            throw new \InvalidArgumentException('non-nullable public_key_hash cannot be null');
+        }
+        $this->container['public_key_hash'] = $public_key_hash;
+
+        return $this;
+    }
+
+    /**
+     * Gets transaction_id
+     *
+     * @return string|null
+     */
+    public function getTransactionId()
+    {
+        return $this->container['transaction_id'];
+    }
+
+    /**
+     * Sets transaction_id
+     *
+     * @param string|null $transaction_id transaction_id
+     *
+     * @return self
+     */
+    public function setTransactionId($transaction_id)
+    {
+        if (is_null($transaction_id)) {
+            throw new \InvalidArgumentException('non-nullable transaction_id cannot be null');
+        }
+        $this->container['transaction_id'] = $transaction_id;
 
         return $this;
     }

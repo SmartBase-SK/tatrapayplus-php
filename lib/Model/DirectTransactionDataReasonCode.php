@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * DirectTransactionDataReasonCode
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * DirectTransactionDataReasonCode Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class DirectTransactionDataReasonCode implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = 'directTransactionData_reasonCode';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        
     ];
 
     /**
@@ -68,7 +68,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        
     ];
 
     /**
@@ -77,7 +77,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        
     ];
 
     /**
@@ -166,7 +166,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        
     ];
 
     /**
@@ -175,7 +175,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        
     ];
 
     /**
@@ -184,7 +184,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        
     ];
 
     /**
@@ -244,7 +244,6 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
     }
 
     /**
@@ -288,33 +287,6 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
         return count($this->listInvalidProperties()) === 0;
     }
 
-
-    /**
-     * Gets token
-     *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
-     */
-    public function getToken()
-    {
-        return $this->container['token'];
-    }
-
-    /**
-     * Sets token
-     *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
-     *
-     * @return self
-     */
-    public function setToken($token)
-    {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
-        }
-        $this->container['token'] = $token;
-
-        return $this;
-    }
     /**
      * Returns true if offset exists. False otherwise.
      *

@@ -1,6 +1,6 @@
 <?php
 /**
- * CardPayStatusStructure
+ * PaymentIntentStatusResponseStatus
  *
  * PHP version 8.1
  *
@@ -32,16 +32,15 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * CardPayStatusStructure Class Doc Comment
+ * PaymentIntentStatusResponseStatus Class Doc Comment
  *
  * @category Class
- * @description card pay status structure
  * @package  Tatrapayplus\TatrapayplusApiClient
  * @author   OpenAPI Generator team
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class CardPayStatusStructure implements ModelInterface, ArrayAccess, \JsonSerializable
+class PaymentIntentStatusResponseStatus implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -50,7 +49,7 @@ class CardPayStatusStructure implements ModelInterface, ArrayAccess, \JsonSerial
       *
       * @var string
       */
-    protected static $openAPIModelName = 'cardPayStatusStructure';
+    protected static $openAPIModelName = 'paymentIntentStatusResponse_status';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -415,7 +414,7 @@ class CardPayStatusStructure implements ModelInterface, ArrayAccess, \JsonSerial
         }
 
         if ((!preg_match("/[A-Z]{3}/", ObjectSerializer::toString($currency)))) {
-            throw new \InvalidArgumentException("invalid value for \$currency when calling CardPayStatusStructure., must conform to the pattern /[A-Z]{3}/.");
+            throw new \InvalidArgumentException("invalid value for \$currency when calling PaymentIntentStatusResponseStatus., must conform to the pattern /[A-Z]{3}/.");
         }
 
         $this->container['currency'] = $currency;
@@ -556,7 +555,7 @@ class CardPayStatusStructure implements ModelInterface, ArrayAccess, \JsonSerial
             throw new \InvalidArgumentException('non-nullable masked_card_number cannot be null');
         }
         if ((mb_strlen($masked_card_number) > 19)) {
-            throw new \InvalidArgumentException('invalid length for $masked_card_number when calling CardPayStatusStructure., must be smaller than or equal to 19.');
+            throw new \InvalidArgumentException('invalid length for $masked_card_number when calling PaymentIntentStatusResponseStatus., must be smaller than or equal to 19.');
         }
 
         $this->container['masked_card_number'] = $masked_card_number;
@@ -615,7 +614,7 @@ class CardPayStatusStructure implements ModelInterface, ArrayAccess, \JsonSerial
         }
 
         if ((!preg_match("/^[ 0-9A-Z]{6}$/", ObjectSerializer::toString($payment_authorization_code)))) {
-            throw new \InvalidArgumentException("invalid value for \$payment_authorization_code when calling CardPayStatusStructure., must conform to the pattern /^[ 0-9A-Z]{6}$/.");
+            throw new \InvalidArgumentException("invalid value for \$payment_authorization_code when calling PaymentIntentStatusResponseStatus., must conform to the pattern /^[ 0-9A-Z]{6}$/.");
         }
 
         $this->container['payment_authorization_code'] = $payment_authorization_code;

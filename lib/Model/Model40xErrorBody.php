@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * Model40xErrorBody
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * Model40xErrorBody Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class Model40xErrorBody implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = '40x_errorBody';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        'error_code' => 'string',
+        'error_description' => 'string'
     ];
 
     /**
@@ -68,7 +69,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        'error_code' => null,
+        'error_description' => null
     ];
 
     /**
@@ -77,7 +79,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        'error_code' => false,
+        'error_description' => false
     ];
 
     /**
@@ -166,7 +169,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        'error_code' => 'errorCode',
+        'error_description' => 'errorDescription'
     ];
 
     /**
@@ -175,7 +179,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        'error_code' => 'setErrorCode',
+        'error_description' => 'setErrorDescription'
     ];
 
     /**
@@ -184,7 +189,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        'error_code' => 'getErrorCode',
+        'error_description' => 'getErrorDescription'
     ];
 
     /**
@@ -228,6 +234,25 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
         return self::$openAPIModelName;
     }
 
+    public const ERROR_CODE_NOT_ALLOWED_OPER = 'NOT_ALLOWED_OPER';
+    public const ERROR_CODE_TOKEN_UNKNOWN = 'TOKEN_UNKNOWN';
+    public const ERROR_CODE_TOKEN_INVALID = 'TOKEN_INVALID';
+    public const ERROR_CODE_TOKEN_EXPIRED = 'TOKEN_EXPIRED';
+
+    /**
+     * Gets allowable values of the enum
+     *
+     * @return string[]
+     */
+    public function getErrorCodeAllowableValues()
+    {
+        return [
+            self::ERROR_CODE_NOT_ALLOWED_OPER,
+            self::ERROR_CODE_TOKEN_UNKNOWN,
+            self::ERROR_CODE_TOKEN_INVALID,
+            self::ERROR_CODE_TOKEN_EXPIRED,
+        ];
+    }
 
     /**
      * Associative array for storing property values
@@ -244,7 +269,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
+        $this->setIfExists('error_code', $data ?? [], null);
+        $this->setIfExists('error_description', $data ?? [], null);
     }
 
     /**
@@ -274,6 +300,26 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
     {
         $invalidProperties = [];
 
+        if ($this->container['error_code'] === null) {
+            $invalidProperties[] = "'error_code' can't be null";
+        }
+        $allowedValues = $this->getErrorCodeAllowableValues();
+        if (!is_null($this->container['error_code']) && !in_array($this->container['error_code'], $allowedValues, true)) {
+            $invalidProperties[] = sprintf(
+                "invalid value '%s' for 'error_code', must be one of '%s'",
+                $this->container['error_code'],
+                implode("', '", $allowedValues)
+            );
+        }
+
+        if ((mb_strlen($this->container['error_code']) > 20)) {
+            $invalidProperties[] = "invalid value for 'error_code', the character length must be smaller than or equal to 20.";
+        }
+
+        if (!is_null($this->container['error_description']) && (mb_strlen($this->container['error_description']) > 1024)) {
+            $invalidProperties[] = "invalid value for 'error_description', the character length must be smaller than or equal to 1024.";
+        }
+
         return $invalidProperties;
     }
 
@@ -290,28 +336,73 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
 
 
     /**
-     * Gets token
+     * Gets error_code
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
+     * @return string
      */
-    public function getToken()
+    public function getErrorCode()
     {
-        return $this->container['token'];
+        return $this->container['error_code'];
     }
 
     /**
-     * Sets token
+     * Sets error_code
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
+     * @param string $error_code error_code
      *
      * @return self
      */
-    public function setToken($token)
+    public function setErrorCode($error_code)
     {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
+        if (is_null($error_code)) {
+            throw new \InvalidArgumentException('non-nullable error_code cannot be null');
         }
-        $this->container['token'] = $token;
+        $allowedValues = $this->getErrorCodeAllowableValues();
+        if (!in_array($error_code, $allowedValues, true)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    "Invalid value '%s' for 'error_code', must be one of '%s'",
+                    $error_code,
+                    implode("', '", $allowedValues)
+                )
+            );
+        }
+        if ((mb_strlen($error_code) > 20)) {
+            throw new \InvalidArgumentException('invalid length for $error_code when calling Model40xErrorBody., must be smaller than or equal to 20.');
+        }
+
+        $this->container['error_code'] = $error_code;
+
+        return $this;
+    }
+
+    /**
+     * Gets error_description
+     *
+     * @return string|null
+     */
+    public function getErrorDescription()
+    {
+        return $this->container['error_description'];
+    }
+
+    /**
+     * Sets error_description
+     *
+     * @param string|null $error_description error_description
+     *
+     * @return self
+     */
+    public function setErrorDescription($error_description)
+    {
+        if (is_null($error_description)) {
+            throw new \InvalidArgumentException('non-nullable error_description cannot be null');
+        }
+        if ((mb_strlen($error_description) > 1024)) {
+            throw new \InvalidArgumentException('invalid length for $error_description when calling Model40xErrorBody., must be smaller than or equal to 1024.');
+        }
+
+        $this->container['error_description'] = $error_description;
 
         return $this;
     }

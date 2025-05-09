@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * ApplePayTokenToken
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * ApplePayTokenToken Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class ApplePayTokenToken implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = 'applePayToken_token';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        'header' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenTokenHeader',
+        'data' => 'string',
+        'signature' => 'string',
+        'version' => 'string'
     ];
 
     /**
@@ -68,7 +71,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        'header' => null,
+        'data' => null,
+        'signature' => null,
+        'version' => null
     ];
 
     /**
@@ -77,7 +83,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        'header' => false,
+        'data' => false,
+        'signature' => false,
+        'version' => false
     ];
 
     /**
@@ -166,7 +175,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        'header' => 'header',
+        'data' => 'data',
+        'signature' => 'signature',
+        'version' => 'version'
     ];
 
     /**
@@ -175,7 +187,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        'header' => 'setHeader',
+        'data' => 'setData',
+        'signature' => 'setSignature',
+        'version' => 'setVersion'
     ];
 
     /**
@@ -184,7 +199,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        'header' => 'getHeader',
+        'data' => 'getData',
+        'signature' => 'getSignature',
+        'version' => 'getVersion'
     ];
 
     /**
@@ -244,7 +262,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
+        $this->setIfExists('header', $data ?? [], null);
+        $this->setIfExists('data', $data ?? [], null);
+        $this->setIfExists('signature', $data ?? [], null);
+        $this->setIfExists('version', $data ?? [], null);
     }
 
     /**
@@ -290,28 +311,109 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
 
 
     /**
-     * Gets token
+     * Gets header
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenTokenHeader|null
      */
-    public function getToken()
+    public function getHeader()
     {
-        return $this->container['token'];
+        return $this->container['header'];
     }
 
     /**
-     * Sets token
+     * Sets header
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenTokenHeader|null $header header
      *
      * @return self
      */
-    public function setToken($token)
+    public function setHeader($header)
     {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
+        if (is_null($header)) {
+            throw new \InvalidArgumentException('non-nullable header cannot be null');
         }
-        $this->container['token'] = $token;
+        $this->container['header'] = $header;
+
+        return $this;
+    }
+
+    /**
+     * Gets data
+     *
+     * @return string|null
+     */
+    public function getData()
+    {
+        return $this->container['data'];
+    }
+
+    /**
+     * Sets data
+     *
+     * @param string|null $data data
+     *
+     * @return self
+     */
+    public function setData($data)
+    {
+        if (is_null($data)) {
+            throw new \InvalidArgumentException('non-nullable data cannot be null');
+        }
+        $this->container['data'] = $data;
+
+        return $this;
+    }
+
+    /**
+     * Gets signature
+     *
+     * @return string|null
+     */
+    public function getSignature()
+    {
+        return $this->container['signature'];
+    }
+
+    /**
+     * Sets signature
+     *
+     * @param string|null $signature signature
+     *
+     * @return self
+     */
+    public function setSignature($signature)
+    {
+        if (is_null($signature)) {
+            throw new \InvalidArgumentException('non-nullable signature cannot be null');
+        }
+        $this->container['signature'] = $signature;
+
+        return $this;
+    }
+
+    /**
+     * Gets version
+     *
+     * @return string|null
+     */
+    public function getVersion()
+    {
+        return $this->container['version'];
+    }
+
+    /**
+     * Sets version
+     *
+     * @param string|null $version version
+     *
+     * @return self
+     */
+    public function setVersion($version)
+    {
+        if (is_null($version)) {
+            throw new \InvalidArgumentException('non-nullable version cannot be null');
+        }
+        $this->container['version'] = $version;
 
         return $this;
     }

@@ -2,8 +2,38 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient;
 
+use Tatrapayplus\TatrapayplusApiClient\Model\BankTransferStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest;
+use Tatrapayplus\TatrapayplusApiClient\Model\PayLaterStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
+use Tatrapayplus\TatrapayplusApiClient\Model\QRStatus;
+
 class TatraPayPlusService
 {
+    public const SIMPLE_STATUS_ACCEPTED = 'ACCEPTED';
+    public const SIMPLE_STATUS_PENDING = 'PENDING';
+    public const SIMPLE_STATUS_REJECTED = 'REJECTED';
+
+    public const SIMPLE_STATUS_MAP = array(
+        PaymentMethod::PAY_LATER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [PayLaterStatus::LOAN_APPLICATION_FINISHED, PayLaterStatus::LOAN_DISBURSED],
+            self::SIMPLE_STATUS_REJECTED => [PayLaterStatus::CANCELED, PayLaterStatus::EXPIRED],
+        ),
+        PaymentMethod::CARD_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+        ),
+        PaymentMethod::BANK_TRANSFER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [BankTransferStatus::ACCC, BankTransferStatus::ACSC],
+            self::SIMPLE_STATUS_REJECTED => [BankTransferStatus::CANC, BankTransferStatus::RJCT],
+        ),
+        PaymentMethod::QR_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [QRStatus::ACCC],
+            self::SIMPLE_STATUS_REJECTED => [QRStatus::EXPIRED],
+        ),
+    );
+
     public static function remove_diacritics($string)
     {
         $pattern = '/[^0-9a-zA-Z.@_ -]/';
@@ -153,5 +183,43 @@ class TatraPayPlusService
         $signedData = wordwrap(base64_encode($encryptedData), 64, '\n', true);
 
         return $signedData;
+    }
+
+    public static function map_simple_status($status_response)
+    {
+        $status_to_return = self::SIMPLE_STATUS_PENDING;
+
+        $status_response_object = $status_response['object'];
+        $selected_method = $status_response_object->getSelectedPaymentMethod();
+        $status_to_map = $status_response_object->getStatus();
+
+        if (!array_key_exists($selected_method, self::SIMPLE_STATUS_MAP) || is_null($status_to_map)) {
+            return $status_to_return;
+        }
+
+        if (!is_string($status_to_map)) {
+            $status_to_map = $status_to_map->getStatus();
+        }
+
+        foreach (self::SIMPLE_STATUS_MAP[$selected_method] as $simple_status => $gateway_statuses) {
+            if (in_array($status_to_map, $gateway_statuses)) {
+                $status_to_return = $simple_status;
+                break;
+            }
+        }
+        return $status_to_return;
+    }
+
+    public static function remove_card_holder_diacritics($initiate_payment_request)
+    {
+        if ($initiate_payment_request instanceof InitiateDirectTransactionRequest) {
+            $card_detail = $initiate_payment_request->getTdsData();
+            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+        } else {
+            $card_detail = $initiate_payment_request->getCardDetail();
+            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+        }
+
+        return $initiate_payment_request;
     }
 }

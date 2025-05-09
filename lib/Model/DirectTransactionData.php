@@ -1,6 +1,6 @@
 <?php
 /**
- * Token
+ * DirectTransactionData
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Token Class Doc Comment
+ * DirectTransactionData Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Token implements ModelInterface, ArrayAccess, \JsonSerializable
+class DirectTransactionData implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       *
       * @var string
       */
-    protected static $openAPIModelName = 'token';
+    protected static $openAPIModelName = 'directTransactionData';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,7 +57,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken'
+        'reason_code' => '\Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionDataReasonCode',
+        'payment_authorization_code' => 'string'
     ];
 
     /**
@@ -68,7 +69,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'token' => null
+        'reason_code' => null,
+        'payment_authorization_code' => null
     ];
 
     /**
@@ -77,7 +79,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'token' => false
+        'reason_code' => false,
+        'payment_authorization_code' => false
     ];
 
     /**
@@ -166,7 +169,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'token' => 'token'
+        'reason_code' => 'reasonCode',
+        'payment_authorization_code' => 'paymentAuthorizationCode'
     ];
 
     /**
@@ -175,7 +179,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'token' => 'setToken'
+        'reason_code' => 'setReasonCode',
+        'payment_authorization_code' => 'setPaymentAuthorizationCode'
     ];
 
     /**
@@ -184,7 +189,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'token' => 'getToken'
+        'reason_code' => 'getReasonCode',
+        'payment_authorization_code' => 'getPaymentAuthorizationCode'
     ];
 
     /**
@@ -244,7 +250,8 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('token', $data ?? [], null);
+        $this->setIfExists('reason_code', $data ?? [], null);
+        $this->setIfExists('payment_authorization_code', $data ?? [], null);
     }
 
     /**
@@ -274,6 +281,10 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
     {
         $invalidProperties = [];
 
+        if (!is_null($this->container['payment_authorization_code']) && !preg_match("/^[ 0-9A-Z]{6}$/", $this->container['payment_authorization_code'])) {
+            $invalidProperties[] = "invalid value for 'payment_authorization_code', must be conform to the pattern /^[ 0-9A-Z]{6}$/.";
+        }
+
         return $invalidProperties;
     }
 
@@ -290,28 +301,60 @@ class Token implements ModelInterface, ArrayAccess, \JsonSerializable
 
 
     /**
-     * Gets token
+     * Gets reason_code
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionDataReasonCode|null
      */
-    public function getToken()
+    public function getReasonCode()
     {
-        return $this->container['token'];
+        return $this->container['reason_code'];
     }
 
     /**
-     * Sets token
+     * Sets reason_code
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\ApplePayTokenToken|null $token token
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionDataReasonCode|null $reason_code reason_code
      *
      * @return self
      */
-    public function setToken($token)
+    public function setReasonCode($reason_code)
     {
-        if (is_null($token)) {
-            throw new \InvalidArgumentException('non-nullable token cannot be null');
+        if (is_null($reason_code)) {
+            throw new \InvalidArgumentException('non-nullable reason_code cannot be null');
         }
-        $this->container['token'] = $token;
+        $this->container['reason_code'] = $reason_code;
+
+        return $this;
+    }
+
+    /**
+     * Gets payment_authorization_code
+     *
+     * @return string|null
+     */
+    public function getPaymentAuthorizationCode()
+    {
+        return $this->container['payment_authorization_code'];
+    }
+
+    /**
+     * Sets payment_authorization_code
+     *
+     * @param string|null $payment_authorization_code Payment authorization code
+     *
+     * @return self
+     */
+    public function setPaymentAuthorizationCode($payment_authorization_code)
+    {
+        if (is_null($payment_authorization_code)) {
+            throw new \InvalidArgumentException('non-nullable payment_authorization_code cannot be null');
+        }
+
+        if ((!preg_match("/^[ 0-9A-Z]{6}$/", ObjectSerializer::toString($payment_authorization_code)))) {
+            throw new \InvalidArgumentException("invalid value for \$payment_authorization_code when calling DirectTransactionData., must conform to the pattern /^[ 0-9A-Z]{6}$/.");
+        }
+
+        $this->container['payment_authorization_code'] = $payment_authorization_code;
 
         return $this;
     }
