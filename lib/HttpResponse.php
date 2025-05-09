@@ -7,12 +7,14 @@ class HttpResponse
     private $body;
     private $headers;
     private $statusCode;
+    private $request;
 
-    public function __construct($body, $headers, $statusCode)
+    public function __construct($body, $headers, $statusCode, $request = null)
     {
         $this->body = $body;
         $this->headers = $headers;
         $this->statusCode = $statusCode;
+        $this->request = $request;
     }
 
     public function getBody()
@@ -28,5 +30,10 @@ class HttpResponse
     public function getStatusCode()
     {
         return $this->statusCode;
+    }
+
+    public function getRequest()
+    {
+        return $this->request;
     }
 }

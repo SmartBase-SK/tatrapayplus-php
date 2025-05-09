@@ -2,9 +2,9 @@ name: PHP Composer
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev_tests" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev_tests" ]
 
 permissions:
   contents: read
@@ -13,6 +13,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      TATRAPAY_CLIENT_ID: ${{ secrets.TATRAPAY_CLIENT_ID }}
+      TATRAPAY_CLIENT_SECRET: ${{ secrets.TATRAPAY_CLIENT_SECRET }}
 
     steps:
     - uses: actions/checkout@v4

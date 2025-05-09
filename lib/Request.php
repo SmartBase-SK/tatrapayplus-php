@@ -22,6 +22,21 @@ class Request
         return $this->url;
     }
 
+    public function getBody()
+    {
+        return $this->httpBody;
+    }
+
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
     public function __toString()
     {
         $headersString = '';

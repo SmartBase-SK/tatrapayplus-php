@@ -9,9 +9,9 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient;
 
+use InvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\Api\TatraPayPlusAPIApi;
 use Tatrapayplus\TatrapayplusApiClient\Model\ModelInterface;
-use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
 
 class ObjectSerializer
 {
@@ -378,7 +378,7 @@ class ObjectSerializer
             $data = is_string($data) ? TatraPayPlusAPIApi::json_decode($data) : $data;
 
             if (!is_array($data)) {
-                throw new SanitizedInvalidArgumentException("Invalid array '$class'");
+                throw new InvalidArgumentException("Invalid array '$class'");
             }
 
             $subClass = substr($class, 0, -2);
@@ -549,7 +549,7 @@ class ObjectSerializer
         } elseif ($encoding === PHP_QUERY_RFC1738) {
             $encoder = 'urlencode';
         } else {
-            throw new SanitizedInvalidArgumentException('Invalid type');
+            throw new InvalidArgumentException('Invalid type');
         }
 
         $castBool = Configuration::BOOLEAN_FORMAT_INT == Configuration::getDefaultConfiguration()->getBooleanFormatForQueryString()
