@@ -168,12 +168,15 @@ final class Tests extends TestCase
     public function testGenerateSignedCardId(): void
     {
         $public_key_content = file_get_contents(
-            dirname(dirname(__FILE__)) . "/tests/ECID_PUBLIC_KEY_2023.txt"
+            dirname(dirname(__FILE__)) . "/ECID_PUBLIC_KEY_2023.txt"
         );
         $signed_card_id = TatraPayPlusAPIApi::generateSignedCardId(
             "123",
             $public_key_content
         );
+        $this->assertTrue(is_string($signed_card_id));
+
+        $signed_card_id = TatraPayPlusAPIApi::generateSignedCardId("123");
         $this->assertTrue(is_string($signed_card_id));
     }
 

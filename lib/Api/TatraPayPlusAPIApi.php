@@ -975,8 +975,14 @@ class TatraPayPlusAPIApi
         );
     }
 
-    public static function generateSignedCardId(string $cid, string $public_key_content): string
+    public static function generateSignedCardId(string $cid, string $public_key_content = null): string
     {
+        if (empty($public_key_content)) {
+            $public_key_content = file_get_contents(
+                dirname(dirname(__FILE__)) . "/../ECID_PUBLIC_KEY_2023.txt"
+            );
+        }
+
         return TatraPayPlusService::generate_signed_card_id_from_cid($cid, $public_key_content);
     }
 
