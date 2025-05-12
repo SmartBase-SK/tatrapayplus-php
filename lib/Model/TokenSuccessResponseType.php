@@ -338,7 +338,7 @@ class TokenSuccessResponseType implements ModelInterface, \ArrayAccess
     public function setAccessToken($access_token)
     {
         if (is_null($access_token)) {
-            throw new SanitizedInvalidArgumentException('non-nullable access_token cannot be null');
+            throw new InvalidArgumentException('non-nullable access_token cannot be null');
         }
         $this->container['access_token'] = $access_token;
 
@@ -365,7 +365,7 @@ class TokenSuccessResponseType implements ModelInterface, \ArrayAccess
     public function setRefreshToken($refresh_token)
     {
         if (is_null($refresh_token)) {
-            throw new SanitizedInvalidArgumentException('non-nullable refresh_token cannot be null');
+            throw new InvalidArgumentException('non-nullable refresh_token cannot be null');
         }
         $this->container['refresh_token'] = $refresh_token;
 
@@ -392,7 +392,7 @@ class TokenSuccessResponseType implements ModelInterface, \ArrayAccess
     public function setExpiresIn($expires_in)
     {
         if (is_null($expires_in)) {
-            throw new SanitizedInvalidArgumentException('non-nullable expires_in cannot be null');
+            throw new InvalidArgumentException('non-nullable expires_in cannot be null');
         }
         $this->container['expires_in'] = $expires_in;
 
@@ -419,7 +419,7 @@ class TokenSuccessResponseType implements ModelInterface, \ArrayAccess
     public function setTokenType($token_type)
     {
         if (is_null($token_type)) {
-            throw new SanitizedInvalidArgumentException('non-nullable token_type cannot be null');
+            throw new InvalidArgumentException('non-nullable token_type cannot be null');
         }
         $this->container['token_type'] = $token_type;
 
@@ -446,11 +446,11 @@ class TokenSuccessResponseType implements ModelInterface, \ArrayAccess
     public function setScope($scope)
     {
         if (is_null($scope)) {
-            throw new SanitizedInvalidArgumentException('non-nullable scope cannot be null');
+            throw new InvalidArgumentException('non-nullable scope cannot be null');
         }
         $allowedValues = $this->getScopeAllowableValues();
         if (!in_array($scope, $allowedValues, true)) {
-            throw new SanitizedInvalidArgumentException(sprintf("Invalid value '%s' for 'scope', must be one of '%s'", $scope, implode("', '", $allowedValues)));
+            throw new InvalidArgumentException(sprintf("Invalid value '%s' for 'scope', must be one of '%s'", $scope, implode("', '", $allowedValues)));
         }
         $this->container['scope'] = $scope;
 

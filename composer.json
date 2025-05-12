@@ -1,7 +1,11 @@
 {
     "name": "tatrapayplus/tatrapayplus_api_client",
     "type": "library",
+    "description": "PHP SDK for Tatrapay+ payment gateway API",
     "license": "OSL-3.0",
+    "scripts": {
+        "test": "phpunit --bootstrap vendor/autoload.php tests/tests.php"
+    },
     "autoload": {
         "psr-4": {
             "Tatrapayplus\\TatrapayplusApiClient\\" : "lib/"

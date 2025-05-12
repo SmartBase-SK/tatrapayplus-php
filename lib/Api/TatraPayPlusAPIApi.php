@@ -2,16 +2,25 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient\Api;
 
+use InvalidArgumentException;
+use Tatrapayplus\TatrapayplusApiClient\AccessToken;
 use Tatrapayplus\TatrapayplusApiClient\ApiException;
 use Tatrapayplus\TatrapayplusApiClient\Configuration;
 use Tatrapayplus\TatrapayplusApiClient\HeaderSelector;
+use Tatrapayplus\TatrapayplusApiClient\HttpResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
-use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\Request;
+use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
 
 class TatraPayPlusAPIApi
 {
+    public const PRODUCTION = 0;
+    public const SANDBOX = 1;
+    public const GRANT_TYPE = 'client_credentials';
+    public const RETRIES = 3;
+    public const RETRY_STATUSES = [500, 502, 503, 504];
+
     /** @var string[] * */
     public const contentTypes = [
         'cancelPaymentIntent' => [
@@ -43,6 +52,11 @@ class TatraPayPlusAPIApi
      * @var object
      */
     protected $client;
+
+    /**
+     * @var object
+     */
+    protected $logger;
     /**
      * @var Configuration
      */
@@ -51,24 +65,48 @@ class TatraPayPlusAPIApi
      * @var HeaderSelector
      */
     protected $headerSelector;
-    /**
-     * @var int Host index
-     */
-    protected $hostIndex;
 
     /**
-     * @param object $client
-     * @param Configuration $config
-     * @param HeaderSelector $selector
+     * @var string
      */
+    private string $client_id;
+
+    /**
+     * @var string
+     */
+    private string $client_secret;
+
+    /**
+     * @var string
+     */
+    private string $scope;
+
+    /**
+     * @var AccessToken
+     */
+    private ?AccessToken $access_token;
+
     public function __construct(
-        Configuration $config,
-        ?object $client = null,
-        ?HeaderSelector $selector = null
+        string $client_id,
+        string $client_secret,
+        object|null $logger = null,
+        int $mode = self::SANDBOX,
+        string $scope = 'TATRAPAYPLUS',
+        object|null $client = null
     ) {
-        $this->config = $config;
-        $this->client = $client;
-        $this->headerSelector = $selector ?: new HeaderSelector();
+        $this->client_id = $client_id;
+        $this->client_secret = $client_secret;
+        $this->scope = $scope;
+        $this->access_token = null;
+        $this->logger = $logger;
+
+        $this->headerSelector = new HeaderSelector();
+        if (is_null($client)) {
+            $this->client = new \Tatrapayplus\TatrapayplusApiClient\CurlClient();
+        } else {
+            $this->client = $client;
+        }
+        $this->config = \Tatrapayplus\TatrapayplusApiClient\Configuration::getDefaultConfiguration($mode);
     }
 
     /**
@@ -77,6 +115,23 @@ class TatraPayPlusAPIApi
     public function getConfig()
     {
         return $this->config;
+    }
+
+    public function setClient(object|null $client): void
+    {
+        $this->client = $client;
+    }
+
+    public function addAuthHeader(array $headers): array
+    {
+        if (is_null($this->access_token) || $this->access_token->isExpired()) {
+            $response = $this->token(self::GRANT_TYPE, $this->client_id, $this->client_secret, $this->scope);
+            $responseObj = $response['object'];
+            $this->access_token = new AccessToken($responseObj->getAccessToken(), (int) $responseObj->getExpiresIn());
+        }
+
+        $headers['Authorization'] = 'Bearer ' . $this->access_token->getAccessToken();
+        return $headers;
     }
 
     /**
@@ -104,13 +159,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function cancelPaymentIntentRequest($payment_id)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling cancelPaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling cancelPaymentIntent');
         }
 
         $resourcePath = '/v1/payments/{payment-id}';
@@ -127,9 +182,7 @@ class TatraPayPlusAPIApi
         );
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -159,8 +212,7 @@ class TatraPayPlusAPIApi
 			if (function_exists('sanitize_text_field')) {
 				$remote_addr = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 			} else {
-				// This line won't be used by WP.
-				$remote_addr = $_SERVER['REMOTE_ADDR']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$remote_addr = $_SERVER['REMOTE_ADDR'];
 			}
 		} else {
 			$remote_addr = '127.0.0.1';
@@ -201,63 +253,127 @@ class TatraPayPlusAPIApi
 
     public function processRequest($request, $target_structure, $error_structure)
     {
-        try {
+        $attempts = 1;
+        do {
             try {
-                $response = $this->client->send($request);
-            } catch (RequestException $e) {
-                throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), $e->getResponse() ? $e->getResponse()->getHeaders() : null, $e->getResponse() ? (string) $e->getResponse()->getBody() : null);
-            } catch (ConnectException $e) {
-                throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), null, null);
-            }
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(sprintf('[%d] Error connecting to the API (%s)', $statusCode, (string) $request->getUri(), (string) $response->getBody()), $statusCode, $response->getHeaders(), (string) $response->getBody(), (string) $request);
-            }
-
-            if (!is_null($target_structure)) {
-                $content = (string) $response->getBody();
-                try {
-                    $content = static::json_decode($content, false, 512, JSON_THROW_ON_ERROR);
-                } catch (\JsonException $exception) {
-                    throw new ApiException(sprintf('Error JSON decoding server response (%s)', $request->getUri()), $statusCode, $response->getHeaders(), $content);
+                $response = $this->_processRequest($request, $target_structure);
+                $this->log($response['response']);
+                return $response;
+            } catch (ApiException $e) {
+                if (!$e->isRetry() || $attempts >= self::RETRIES) {
+                    $error_obj = is_null($error_structure) ? null : ObjectSerializer::deserialize($e->getResponseBody(), $error_structure, $e->getResponseHeaders());
+                    $e->setResponseObject($error_obj);
+                    throw $e;
                 }
             }
 
-            switch ($statusCode) {
-                case 200:
-                case 201:
-                    return [
-                        'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
-                        'response' => $response,
-                    ];
-            }
+        } while ($attempts++ < self::RETRIES);
 
-            $content = $response->getBody();
+        return null;
+    }
 
-            return [
-                'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
-                'response' => $response,
-            ];
-        } catch (ApiException $e) {
-            switch ($e->getCode()) {
-                case 400:
-                    $data = ObjectSerializer::deserialize(
-                        $e->getResponseBody(),
-                        $error_structure,
-                        $e->getResponseHeaders()
-                    );
-                    $e->setResponseObject($data);
-                    break;
-            }
-            throw $e;
+    private function _processRequest($request, $target_structure)
+    {
+        try {
+            $response = $this->client->send($request);
+        } catch (RequestException $e) {
+            throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), $e->getResponse() ? $e->getResponse()->getHeaders() : null, $e->getResponse() ? (string) $e->getResponse()->getBody() : null);
+        } catch (ConnectException $e) {
+            throw new ApiException("[{$e->getCode()}] {$e->getMessage()}", (int) $e->getCode(), null, null);
         }
+
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode < 200 || $statusCode > 299) {
+            throw new ApiException(
+                sprintf('[%d] Error connecting to the API (%s): %s', $statusCode, $request->getUri(), $response->getBody()),
+                $statusCode,
+                $response->getHeaders(),
+                (string) $response->getBody(),
+                (string) $request,
+                retry: in_array($statusCode, self::RETRY_STATUSES)
+            );
+        }
+
+        if (!is_null($target_structure)) {
+            $content = (string) $response->getBody();
+            try {
+                $content = static::json_decode($content, false, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                throw new ApiException(sprintf('Error JSON decoding server response (%s)', $request->getUri()), $statusCode, $response->getHeaders(), $content);
+            }
+        }
+
+        switch ($statusCode) {
+            case 200:
+            case 201:
+                return [
+                    'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
+                    'response' => $response,
+                ];
+        }
+
+        $content = $response->getBody();
+
+        return [
+            'object' => is_null($target_structure) ? null : ObjectSerializer::deserialize($content, $target_structure, []),
+            'response' => $response,
+        ];
     }
 
     public static function json_decode(...$args)
     {
         return json_decode(...$args);
+    }
+
+    public function getAvailableMethods(
+        float|null $total_amount = null,
+        string|null $currency = null,
+        string|null $country = null
+    ): array
+    {
+        $result = $this->getMethods();
+        $available_methods = $result['object'];
+
+        $available_methods_currencies = [];
+        foreach ($available_methods->getPaymentMethods() as $available_method) {
+            if ($available_method->getAmountRangeRule()) {
+                $amount_range_rule = [
+                    'min_amount' => $available_method->getAmountRangeRule()->getMinAmount(),
+                    'max_amount' => $available_method->getAmountRangeRule()->getMaxAmount(),
+                ];
+            } else {
+                $amount_range_rule = null;
+            }
+
+            if ($total_amount && $amount_range_rule) {
+                if ($total_amount < $amount_range_rule['min_amount'] || $total_amount > $amount_range_rule['max_amount']) {
+                    continue;
+                }
+            }
+
+            $supported_currencies = $available_method->getSupportedCurrency();
+            if ($currency && $supported_currencies) {
+                if (is_array($supported_currencies) && !in_array($currency, $supported_currencies)) {
+                    continue;
+                }
+            }
+
+            $supported_countries = $available_method->getSupportedCountry();
+            if ($country && $supported_countries) {
+                if (is_array($supported_countries) && !in_array($country, $supported_countries)) {
+                    continue;
+                }
+            }
+
+            $available_methods_currencies[$available_method->getPaymentMethod()] = [
+                'supported_currencies' => $supported_currencies,
+                'amount_range_rule' => $amount_range_rule,
+                'supported_countries' => $supported_countries,
+            ];
+        }
+
+        return $available_methods_currencies;
     }
 
     /**
@@ -267,7 +383,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodsListResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function getMethods()
@@ -282,7 +398,7 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getMethodsRequest()
     {
@@ -293,9 +409,7 @@ class TatraPayPlusAPIApi
             false
         );
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -320,16 +434,19 @@ class TatraPayPlusAPIApi
      *
      * @param string $payment_id payment intent identifier (required)
      *
-     * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
+     * @return array of simple_status and \Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function getPaymentIntentStatus($payment_id)
     {
         $request = $this->getPaymentIntentStatusRequest($payment_id);
 
-        return $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+        $response = $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+        $simple_status = TatraPayPlusService::map_simple_status($response);
+
+        return [$simple_status, $response];
     }
 
     /**
@@ -339,13 +456,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getPaymentIntentStatusRequest($payment_id)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling getPaymentIntentStatus');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling getPaymentIntentStatus');
         }
 
         $resourcePath = '/v1/payments/{payment-id}/status';
@@ -368,9 +485,7 @@ class TatraPayPlusAPIApi
         );
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -402,7 +517,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function initiatePayment($redirect_uri, $initiate_payment_request, $preferred_method = null, $accept_language = 'sk')
@@ -422,18 +537,18 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function initiatePaymentRequest($redirect_uri, $initiate_payment_request, $preferred_method = null, $accept_language = 'sk')
     {
         // verify the required parameter 'redirect_uri' is set
         if ($redirect_uri === null || (is_array($redirect_uri) && count($redirect_uri) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $redirect_uri when calling initiatePayment');
+            throw new InvalidArgumentException('Missing the required parameter $redirect_uri when calling initiatePayment');
         }
 
         // verify the required parameter 'initiate_payment_request' is set
         if ($initiate_payment_request === null || (is_array($initiate_payment_request) && count($initiate_payment_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $initiate_payment_request when calling initiatePayment');
+            throw new InvalidArgumentException('Missing the required parameter $initiate_payment_request when calling initiatePayment');
         }
 
         $resourcePath = '/v1/payments';
@@ -459,12 +574,94 @@ class TatraPayPlusAPIApi
             false
         );
 
+        $initiate_payment_request = TatraPayPlusService::remove_card_holder_diacritics($initiate_payment_request);
+
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_payment_request));
         $httpBody = str_replace('\\\\n', '\\n', $httpBody);
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
+        $headers = $this->addAuthHeader($headers);
+
+        $defaultHeaders = $this->getDefaultHeaders();
+
+        $headers = array_merge(
+            $defaultHeaders,
+            $headerParams,
+            $headers
+        );
+
+        $operationHost = $this->config->getHost();
+        $query = ObjectSerializer::buildQuery($queryParams);
+
+        return new Request(
+            'POST',
+            $operationHost . $resourcePath . ($query ? "?{$query}" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    /**
+     * Operation initiateDirectTransaction
+     *
+     * Initiate direct payment intent
+     *
+     * @param string $redirect_uri URI of the client application endpoint, where the user shall be redirected to after payment process. URI has to be registered in Developer portal (required)
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest $initiate_transaction_request
+     *
+     * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentResponse|\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody, HTTP status code, HTTP response headers (array of strings)
+     *
+     * @throws InvalidArgumentException
+     * @throws ApiException on non-2xx response or if the response body is not in the expected format
+     */
+    public function initiateDirectTransaction($redirect_uri, $initiate_transaction_request)
+    {
+        $request = $this->initiateDirectTransactionRequest($redirect_uri, $initiate_transaction_request);
+
+        return $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionResponse', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+    }
+
+    /**
+     * Create request for operation 'initiateDirectTransactionRequest'
+     *
+     * @param string $redirect_uri URI of the client application endpoint, where the user shall be redirected to after payment process. URI has to be registered in Developer portal (required)
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest $initiate_transaction_request
+     *
+     * @return Request
+     *
+     * @throws InvalidArgumentException
+     */
+    public function initiateDirectTransactionRequest($redirect_uri, $initiate_transaction_request)
+    {
+        // verify the required parameter 'redirect_uri' is set
+        if ($redirect_uri === null || (is_array($redirect_uri) && count($redirect_uri) === 0)) {
+            throw new InvalidArgumentException('Missing the required parameter $redirect_uri when calling initiateDirectTransactionRequest');
         }
+
+        // verify the required parameter 'initiate_payment_request' is set
+        if ($initiate_transaction_request === null || (is_array($initiate_transaction_request) && count($initiate_transaction_request) === 0)) {
+            throw new InvalidArgumentException('Missing the required parameter $initiate_transaction_request when calling initiateDirectTransactionRequest');
+        }
+
+        $resourcePath = '/v1/payments-direct';
+        $queryParams = [];
+        $headerParams = [];
+
+        // header params
+        if ($redirect_uri !== null) {
+            $headerParams['Redirect-URI'] = ObjectSerializer::toHeaderValue($redirect_uri);
+        }
+
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json'],
+            self::contentTypes['initiatePayment'][0],
+            false
+        );
+
+        $initiate_transaction_request = TatraPayPlusService::remove_card_holder_diacritics($initiate_transaction_request);
+        $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($initiate_transaction_request));
+        $httpBody = str_replace('\\\\n', '\\n', $httpBody);
+        // this endpoint requires OAuth (access token)
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -515,7 +712,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function updatePaymentIntent($payment_id, $body)
@@ -533,18 +730,18 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function updatePaymentIntentRequest($payment_id, $body)
     {
         // verify the required parameter 'payment_id' is set
         if ($payment_id === null || (is_array($payment_id) && count($payment_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $payment_id when calling updatePaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $payment_id when calling updatePaymentIntent');
         }
 
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $body when calling updatePaymentIntent');
+            throw new InvalidArgumentException('Missing the required parameter $body when calling updatePaymentIntent');
         }
 
         $resourcePath = '/v1/payments/{payment-id}';
@@ -568,9 +765,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($body));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -602,22 +797,22 @@ class TatraPayPlusAPIApi
     {
         // verify the required parameter '$grant_type' is set
         if ($grant_type === null || (is_array($grant_type) && count($grant_type) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $grant_type when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $grant_type when calling tokenRequest');
         }
 
         // verify the required parameter '$client_id' is set
         if ($client_id === null || (is_array($client_id) && count($client_id) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $client_id when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $client_id when calling tokenRequest');
         }
 
         // verify the required parameter '$client_secret' is set
         if ($client_secret === null || (is_array($client_secret) && count($client_secret) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $client_secret when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $client_secret when calling tokenRequest');
         }
 
         // verify the required parameter '$scope' is set
         if ($scope === null || (is_array($scope) && count($scope) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $scope when calling tokenRequest');
+            throw new InvalidArgumentException('Missing the required parameter $scope when calling tokenRequest');
         }
 
         $resourcePath = '/auth/oauth/v2/token';
@@ -661,7 +856,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function setAppearance($appearance_request)
@@ -678,13 +873,13 @@ class TatraPayPlusAPIApi
      *
      * @return Request
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setAppearanceRequest($appearance_request)
     {
         // verify the required parameter 'appearance_request' is set
         if ($appearance_request === null || (is_array($appearance_request) && count($appearance_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $appearance_request when calling setAppearance');
+            throw new InvalidArgumentException('Missing the required parameter $appearance_request when calling setAppearance');
         }
 
         $resourcePath = '/v1/appearances';
@@ -698,9 +893,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($appearance_request));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -728,7 +921,7 @@ class TatraPayPlusAPIApi
      *
      * @return array of null, HTTP status code, HTTP response headers (array of strings)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws ApiException on non-2xx response or if the response body is not in the expected format
      */
     public function setLogo($appearance_logo_request)
@@ -743,13 +936,13 @@ class TatraPayPlusAPIApi
      *
      * @param \Tatrapayplus\TatrapayplusApiClient\Model\AppearanceLogoRequest $appearance_logo_request (required)
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setLogoRequest($appearance_logo_request)
     {
         // verify the required parameter 'appearance_logo_request' is set
         if ($appearance_logo_request === null || (is_array($appearance_logo_request) && count($appearance_logo_request) === 0)) {
-            throw new SanitizedInvalidArgumentException('Missing the required parameter $appearance_logo_request when calling setLogo');
+            throw new InvalidArgumentException('Missing the required parameter $appearance_logo_request when calling setLogo');
         }
 
         $resourcePath = '/v1/appearances/logo';
@@ -763,9 +956,7 @@ class TatraPayPlusAPIApi
         $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($appearance_logo_request));
 
         // this endpoint requires OAuth (access token)
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
+        $headers = $this->addAuthHeader($headers);
 
         $defaultHeaders = $this->getDefaultHeaders();
 
@@ -782,5 +973,23 @@ class TatraPayPlusAPIApi
             $headers,
             $httpBody
         );
+    }
+
+    public static function generateSignedCardId(string $cid, string $public_key_content = null): string
+    {
+        if (empty($public_key_content)) {
+            $public_key_content = file_get_contents(
+                dirname(dirname(__FILE__)) . "/../ECID_PUBLIC_KEY_2023.txt"
+            );
+        }
+
+        return TatraPayPlusService::generate_signed_card_id_from_cid($cid, $public_key_content);
+    }
+
+    public function log(HttpResponse $response, array $additional_data = null): void
+    {
+        if (!is_null($this->logger)) {
+            $this->logger->log($response, $additional_data);
+        }
     }
 }

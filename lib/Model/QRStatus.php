@@ -58,7 +58,7 @@ class QRStatus
 	public function setStatus($status)
 	{
 		if (is_null($status)) {
-			throw new SanitizedInvalidArgumentException('non-nullable status cannot be null');
+			throw new InvalidArgumentException('non-nullable status cannot be null');
 		}
 		$this->container['status'] = $status;
 

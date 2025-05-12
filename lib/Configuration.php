@@ -8,7 +8,8 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient;
 
-use Tatrapayplus\TatrapayplusApiClient\Model\SanitizedInvalidArgumentException;
+
+use InvalidArgumentException;
 
 class Configuration
 {
@@ -138,7 +139,7 @@ class Configuration
 
         // check array index out of bound
         if ($hostIndex < 0 || $hostIndex >= count($hostSettings)) {
-            throw new SanitizedInvalidArgumentException("Invalid index $hostIndex when selecting the host. Must be less than " . count($hostSettings));
+            throw new InvalidArgumentException("Invalid index $hostIndex when selecting the host. Must be less than " . count($hostSettings));
         }
 
         $host = $hostSettings[$hostIndex];
@@ -150,7 +151,7 @@ class Configuration
                 if (!isset($variable['enum_values']) || in_array($variables[$name], $variable['enum_values'], true)) { // check to see if the value is in the enum
                     $url = str_replace('{' . $name . '}', $variables[$name], $url);
                 } else {
-                    throw new SanitizedInvalidArgumentException("The variable `$name` in the host URL has invalid value " . $variables[$name] . '. Must be ' . join(',', $variable['enum_values']) . '.');
+                    throw new InvalidArgumentException("The variable `$name` in the host URL has invalid value " . $variables[$name] . '. Must be ' . join(',', $variable['enum_values']) . '.');
                 }
             } else {
                 // use default value
@@ -397,12 +398,12 @@ class Configuration
      *
      * @return $this
      *
-     * @throws SanitizedInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setUserAgent($userAgent)
     {
         if (!is_string($userAgent)) {
-            throw new SanitizedInvalidArgumentException('User-agent must be a string.');
+            throw new InvalidArgumentException('User-agent must be a string.');
         }
 
         $this->userAgent = $userAgent;

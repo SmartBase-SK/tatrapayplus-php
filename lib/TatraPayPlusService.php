@@ -2,10 +2,41 @@
 
 namespace Tatrapayplus\TatrapayplusApiClient;
 
+use Tatrapayplus\TatrapayplusApiClient\Model\BankTransferStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest;
+use Tatrapayplus\TatrapayplusApiClient\Model\PayLaterStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
+use Tatrapayplus\TatrapayplusApiClient\Model\QRStatus;
+
 class TatraPayPlusService
 {
-    public const PRODUCTION = 0;
-    public const SANDBOX = 1;
+    public const SIMPLE_STATUS_ACCEPTED = 'ACCEPTED';
+    public const SIMPLE_STATUS_PENDING = 'PENDING';
+    public const SIMPLE_STATUS_REJECTED = 'REJECTED';
+
+    public const SIMPLE_STATUS_MAP = array(
+        PaymentMethod::PAY_LATER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [PayLaterStatus::LOAN_APPLICATION_FINISHED, PayLaterStatus::LOAN_DISBURSED],
+            self::SIMPLE_STATUS_REJECTED => [PayLaterStatus::CANCELED, PayLaterStatus::EXPIRED],
+        ),
+        PaymentMethod::CARD_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+        ),
+        PaymentMethod::BANK_TRANSFER => array(
+            self::SIMPLE_STATUS_ACCEPTED => [BankTransferStatus::ACCC, BankTransferStatus::ACSC],
+            self::SIMPLE_STATUS_REJECTED => [BankTransferStatus::CANC, BankTransferStatus::RJCT],
+        ),
+        PaymentMethod::QR_PAY => array(
+            self::SIMPLE_STATUS_ACCEPTED => [QRStatus::ACCC],
+            self::SIMPLE_STATUS_REJECTED => [QRStatus::EXPIRED],
+        ),
+        PaymentMethod::DIRECT_API => array(
+            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+        ),
+    );
 
     public static function remove_diacritics($string)
     {
@@ -30,72 +61,6 @@ class TatraPayPlusService
 	    $string = str_replace( array('&' , ';', '<', '>', '|', '`' ,'\\' ), ' ', $string);
 
         return $string === '' ? null : $string;
-    }
-
-    public static function retrieve_access_token_with_credentials($client, $client_id, $client_secret, $mode = self::SANDBOX, $scopes = 'TATRAPAYPLUS')
-    {
-        $config = Configuration::getDefaultConfiguration($mode);
-
-        $apiInstance = new Api\TatraPayPlusAPIApi($config, $client);
-        $grant_type = 'client_credentials';
-        try {
-            $response = $apiInstance->token($grant_type, $client_id, $client_secret, $scopes);
-            $access_token = $response['object']->getAccessToken();
-        } catch (Exception $e) {
-            return null;
-        }
-
-        return $access_token;
-    }
-
-    public static function get_available_payment_methods($client, $access_token, $mode)
-    {
-        $config = Configuration::getDefaultConfiguration($mode)->setAccessToken($access_token);
-
-        $apiInstance = new Api\TatraPayPlusAPIApi($config, $client);
-        $result = $apiInstance->getMethods();
-        $available_methods = $result['object'];
-        $available_methods_currencies = [];
-        foreach ($available_methods->getPaymentMethods() as $available_method) {
-            if ($available_method->getAmountRangeRule()) {
-                $amount_range_rule = [
-                    'min_amount' => $available_method->getAmountRangeRule()->getMinAmount(),
-                    'max_amount' => $available_method->getAmountRangeRule()->getMaxAmount(),
-                ];
-            } else {
-                $amount_range_rule = null;
-            }
-
-            $available_methods_currencies[$available_method->getPaymentMethod()] = [
-                'supported_currencies' => $available_method->getSupportedCurrency(),
-                'amount_range_rule' => $amount_range_rule,
-            ];
-        }
-
-        return $available_methods_currencies;
-    }
-
-    public static function is_currency_supported_for_specific_methods(
-        $total_amount,
-        $currency,
-        $available_methods_currencies,
-        $specific_methods
-    ) {
-        foreach ($specific_methods as $method) {
-            if (array_key_exists($method, $available_methods_currencies)) {
-                $method_currencies = $available_methods_currencies[$method]['supported_currencies'] ?? [];
-                $amount_range = $available_methods_currencies[$method]['amount_range_rule'] ?? null;
-                if (in_array($currency, $method_currencies)) {
-                    if ($amount_range == null) {
-                        return true;
-                    } else {
-                        return $amount_range['min_amount'] <= $total_amount and $total_amount <= $amount_range['max_amount'];
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     public static function get_icons_per_method()
@@ -222,5 +187,43 @@ class TatraPayPlusService
         $signedData = wordwrap(base64_encode($encryptedData), 64, '\n', true);
 
         return $signedData;
+    }
+
+    public static function map_simple_status($status_response)
+    {
+        $status_to_return = self::SIMPLE_STATUS_PENDING;
+
+        $status_response_object = $status_response['object'];
+        $selected_method = $status_response_object->getSelectedPaymentMethod();
+        $status_to_map = $status_response_object->getStatus();
+
+        if (!array_key_exists($selected_method, self::SIMPLE_STATUS_MAP) || is_null($status_to_map)) {
+            return $status_to_return;
+        }
+
+        if (!is_string($status_to_map)) {
+            $status_to_map = $status_to_map->getStatus();
+        }
+
+        foreach (self::SIMPLE_STATUS_MAP[$selected_method] as $simple_status => $gateway_statuses) {
+            if (in_array($status_to_map, $gateway_statuses)) {
+                $status_to_return = $simple_status;
+                break;
+            }
+        }
+        return $status_to_return;
+    }
+
+    public static function remove_card_holder_diacritics($initiate_payment_request)
+    {
+        if ($initiate_payment_request instanceof InitiateDirectTransactionRequest) {
+            $card_detail = $initiate_payment_request->getTdsData();
+            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+        } else {
+            $card_detail = $initiate_payment_request->getCardDetail();
+            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+        }
+
+        return $initiate_payment_request;
     }
 }
