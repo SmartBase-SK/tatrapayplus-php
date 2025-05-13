@@ -28,6 +28,11 @@ class ObjectSerializer
         self::$dateTimeFormat = $format;
     }
 
+    public static function removeSpecialCharacters($string)
+    {
+        return preg_replace('/[<>`|\\\\]/', '', $string);
+    }
+
     /**
      * Serialize data
      *
@@ -39,6 +44,10 @@ class ObjectSerializer
      */
     public static function sanitizeForSerialization($data, $type = null, $format = null)
     {
+        if (is_string($data)) {
+            return self::removeSpecialCharacters($data);
+        }
+
         if (is_scalar($data) || null === $data) {
             return $data;
         }

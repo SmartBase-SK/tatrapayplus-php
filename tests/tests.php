@@ -69,7 +69,7 @@ final class Tests extends TestCase
                 "variable_symbol" => "123",
             ]),
             "tds_data" => new DirectTransactionTDSData([
-                "card_holder" => "Janko Hraško",
+                "card_holder" => "Ja<nko> Hrašk|o",
                 "email" => "janko.hrasko@example.com",
                 "billing_address" => $address,
                 "shipping_address" => $address,
@@ -105,21 +105,21 @@ final class Tests extends TestCase
         ]);
 
         $userData = new UserData([
-            "first_name" => "Janko",
-            "last_name" => "Hrasko",
+            "first_name" => "|Jan\ko|",
+            "last_name" => "<Hraško>\\`",
             "email" => "janko.hrasko@example.com",
         ]);
 
         $bankTransfer = new BankTransfer();
         $billingAddress = new Address([
-            "street_name" => "TestStreet",
+            "street_name" => "<Test|\Street",
             "building_number" => "12",
-            "town_name" => "Town",
+            "town_name" => "T<ow>n",
             "post_code" => "97405",
             "country" => "SK",
         ]);
         $shippingAddress = new Address([
-            "street_name" => "TestStreet",
+            "street_name" => "T`est| Street",
             "building_number" => "12",
             "town_name" => "Town",
             "post_code" => "97405",
