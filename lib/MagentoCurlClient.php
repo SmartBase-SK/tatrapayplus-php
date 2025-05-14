@@ -46,7 +46,7 @@ class MagentoCurlClient {
 			exit( 'Unsupported request type' );
 		}
 		if ( $this->logger ) {
-			$this->logger->debug( 'Request: ' . (string) $request );
+			$this->logger->info( 'Request: ' . (string) $request );
 		}
 
 		$response = curl_exec( $ch );
@@ -55,14 +55,14 @@ class MagentoCurlClient {
 			$error = curl_error( $ch );
 			curl_close( $ch );
 			if ( $this->logger ) {
-				$this->logger->debug( 'Response error: ' . (string) $error );
+				$this->logger->info( 'Response error: ' . (string) $error );
 			}
 
 			return $error;
 		}
 		$http_status = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
 		if ( $this->logger ) {
-			$this->logger->debug( 'Response success(status: ' . $http_status . '): ' . (string) $response );
+			$this->logger->info( 'Response success(status: ' . $http_status . '): ' . (string) $response );
 		}
 
 		curl_close( $ch );

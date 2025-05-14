@@ -41,7 +41,7 @@ class TatraPayPlusService
         try {
             $response = $apiInstance->token($grant_type, $client_id, $client_secret, $scopes);
             $access_token = $response['object']->getAccessToken();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return null;
         }
 
@@ -192,7 +192,7 @@ class TatraPayPlusService
         $apiInstance = new Api\TatraPayPlusAPIApi($config, $client);
         try {
             $result = $apiInstance->getPaymentIntentStatus($payment_id);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return null;
         }
 

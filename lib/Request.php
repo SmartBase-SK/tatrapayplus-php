@@ -24,12 +24,33 @@ class Request
 
     public function __toString()
     {
+        // Mask Authorization header
         $headersString = '';
         foreach ($this->headers as $key => $value) {
+            if (strtolower($key) === 'authorization') {
+                $value = '***';
+            }
             $headersString .= "$key: $value\n";
         }
 
-        $httpBodyString = $this->httpBody ? $this->httpBody : 'No body';
+        // Mask client_secret in body (keep first 5 and last 5 characters)
+        $httpBodyString = 'No body';
+        if (!empty($this->httpBody)) {
+            $httpBodyString = preg_replace_callback(
+                '/(client_secret=)([^&]+)/',
+                function ($matches) {
+                    $secret = $matches[2];
+                    if (strlen($secret) <= 10) {
+                        return $matches[1] . str_repeat('*', strlen($secret));
+                    }
+                    return $matches[1]
+                           . substr($secret, 0, 5)
+                           . str_repeat('*', strlen($secret) - 10)
+                           . substr($secret, -5);
+                },
+                $this->httpBody
+            );
+        }
 
         return sprintf(
             "Request:\nMethod: %s\nURL: %s\nHeaders:\n%sBody:\n%s",
