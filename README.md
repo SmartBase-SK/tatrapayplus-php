@@ -9,7 +9,7 @@
 PHP SDK for Tatrapay+ payment gateway.
 
 - **Github repository**: <https://github.com/SmartBase-SK/tatrapayplus-php/>
-- **Documentation** <https://sdk.tatrabanka.sk/docs/libraries/php/v1.0.0>
+- **Documentation** <https://sdk.tatrabanka.sk/docs/libraries/php/v2.0.0>
 
 ## Type generation
 To generate new types after OpenAPI structure has been changed please run
