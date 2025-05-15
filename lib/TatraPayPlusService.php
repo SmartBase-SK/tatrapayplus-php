@@ -11,29 +11,31 @@ use Tatrapayplus\TatrapayplusApiClient\Model\QRStatus;
 
 class TatraPayPlusService
 {
-    public const SIMPLE_STATUS_ACCEPTED = 'ACCEPTED';
+    public const SIMPLE_STATUS_CAPTURE = 'CAPTURE';
+    public const SIMPLE_STATUS_AUTHORIZED = 'AUTHORIZED';
     public const SIMPLE_STATUS_PENDING = 'PENDING';
     public const SIMPLE_STATUS_REJECTED = 'REJECTED';
 
     public const SIMPLE_STATUS_MAP = array(
         PaymentMethod::PAY_LATER => array(
-            self::SIMPLE_STATUS_ACCEPTED => [PayLaterStatus::LOAN_APPLICATION_FINISHED, PayLaterStatus::LOAN_DISBURSED],
+            self::SIMPLE_STATUS_CAPTURE => [PayLaterStatus::LOAN_APPLICATION_FINISHED, PayLaterStatus::LOAN_DISBURSED],
             self::SIMPLE_STATUS_REJECTED => [PayLaterStatus::CANCELED, PayLaterStatus::EXPIRED],
         ),
         PaymentMethod::CARD_PAY => array(
-            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_CAPTURE => [CardPayStatus::OK, CardPayStatus::CB],
             self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
+            self::SIMPLE_STATUS_AUTHORIZED => [CardPayStatus::PA],
         ),
         PaymentMethod::BANK_TRANSFER => array(
-            self::SIMPLE_STATUS_ACCEPTED => [BankTransferStatus::ACCC, BankTransferStatus::ACSC],
+            self::SIMPLE_STATUS_CAPTURE => [BankTransferStatus::ACCC, BankTransferStatus::ACSC],
             self::SIMPLE_STATUS_REJECTED => [BankTransferStatus::CANC, BankTransferStatus::RJCT],
         ),
         PaymentMethod::QR_PAY => array(
-            self::SIMPLE_STATUS_ACCEPTED => [QRStatus::ACCC],
+            self::SIMPLE_STATUS_CAPTURE => [QRStatus::ACCC],
             self::SIMPLE_STATUS_REJECTED => [QRStatus::EXPIRED],
         ),
         PaymentMethod::DIRECT_API => array(
-            self::SIMPLE_STATUS_ACCEPTED => [CardPayStatus::OK, CardPayStatus::CB],
+            self::SIMPLE_STATUS_CAPTURE => [CardPayStatus::OK, CardPayStatus::CB],
             self::SIMPLE_STATUS_REJECTED => [CardPayStatus::FAIL],
         ),
     );
@@ -58,7 +60,7 @@ class TatraPayPlusService
                 $string = substr($string, 0, $limit);
             }
         }
-	    $string = str_replace( array('&' , ';', '<', '>', '|', '`' ,'\\' ), ' ', $string);
+        $string = str_replace(array('&', ';', '<', '>', '|', '`', '\\'), ' ', $string);
 
         return $string === '' ? null : $string;
     }
@@ -108,11 +110,11 @@ class TatraPayPlusService
                 ],
             ],
             Model\PaymentMethod::QR_PAY => [
-	            [
-		            'id' => 'qr',
-		            'src' => 'qr.svg',
-		            'alt' => 'qr',
-	            ],
+                [
+                    'id' => 'qr',
+                    'src' => 'qr.svg',
+                    'alt' => 'qr',
+                ],
             ],
         ];
 

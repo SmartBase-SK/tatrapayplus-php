@@ -408,7 +408,7 @@ final class Tests extends TestCase
         $this->assertSame($response["response"]->getStatusCode(), 201);
         $this->assertSame(
             $simple_status,
-            TatraPayPlusService::SIMPLE_STATUS_ACCEPTED
+            TatraPayPlusService::SIMPLE_STATUS_CAPTURE
         );
         $status_obj = $response["object"]->getStatus();
         $this->assertSame($status_obj->getComfortPay()->getCid(), "123");
