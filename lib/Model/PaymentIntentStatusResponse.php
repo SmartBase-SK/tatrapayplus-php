@@ -60,7 +60,7 @@ class PaymentIntentStatusResponse implements ModelInterface, ArrayAccess, \JsonS
     protected static $openAPITypes = [
         'selected_payment_method' => '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod',
         'authorization_status' => 'string',
-        'status' => '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponseStatus'
+        'status' => 'mixed'
     ];
 
     /**
@@ -427,7 +427,15 @@ class PaymentIntentStatusResponse implements ModelInterface, ArrayAccess, \JsonS
         if (is_null($status)) {
             throw new \InvalidArgumentException('non-nullable status cannot be null');
         }
-        $this->container['status'] = $status;
+        if ($this->getSelectedPaymentMethod() == PaymentMethod::CARD_PAY) {
+            $type = '\Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatusStructure';
+            $value = ObjectSerializer::deserialize($status, $type, null);
+        } elseif (is_string($status)) {
+            $value = $status;
+        } else {
+            throw new \InvalidArgumentException('invalid status value: ' . $status);
+        }
+        $this->container['status'] = $value;
 
         return $this;
     }

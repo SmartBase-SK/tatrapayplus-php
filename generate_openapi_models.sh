@@ -19,6 +19,7 @@ echo "Adding custom Model classes from backup..."
 cp ./lib/ModelBackup/TokenSuccessResponseType.php ./lib/Model
 cp ./lib/ModelBackup/QRStatus.php ./lib/Model
 cp ./lib/ModelBackup/PaymentMethodRules.php ./lib/Model
+cp ./lib/ModelBackup/PaymentIntentStatusResponse.php ./lib/Model
 
 echo "********************************"
 echo "Verify new Model files by running tests -> phpunit --bootstrap vendor/autoload.php tests/tests.php"
