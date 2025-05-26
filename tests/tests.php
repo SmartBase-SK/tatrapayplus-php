@@ -5,14 +5,18 @@ use Tatrapayplus\TatrapayplusApiClient\ApiException;
 use Tatrapayplus\TatrapayplusApiClient\HttpResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\AppearanceLogoRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\AppearanceRequest;
+use Tatrapayplus\TatrapayplusApiClient\Model\BankTransferStatus;
+use Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatus;
 use Tatrapayplus\TatrapayplusApiClient\Model\CardPayUpdateInstruction;
 use Tatrapayplus\TatrapayplusApiClient\Model\ColorAttribute;
 use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData;
 use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionTDSData;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentRequest;
+use Tatrapayplus\TatrapayplusApiClient\Model\PayLaterStatus;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\AmountRangeRule;
+use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethod;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodRules;
 use Tatrapayplus\TatrapayplusApiClient\Model\PaymentMethodsListResponse;
 use Tatrapayplus\TatrapayplusApiClient\Model\BasePayment;
@@ -30,6 +34,7 @@ use Tatrapayplus\TatrapayplusApiClient\Model\OrderItem;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetail;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetailLangUnit;
 use Tatrapayplus\TatrapayplusApiClient\CurlClient;
+use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusLogger;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusService;
 use Tatrapayplus\TatrapayplusApiClient\Api\TatraPayPlusAPIApi;
@@ -554,6 +559,42 @@ final class Tests extends TestCase
 
         $this->assertSame("123456789", $response["object"]->getPaymentId());
         $this->assertSame("custom HTML", $response["object"]->getRedirectFormHtml());
+    }
+
+    public function testMapSimpleStatus()
+    {
+        $test_cases = [
+            // payment_method, status, expected_result
+            [PaymentMethod::BANK_TRANSFER, BankTransferStatus::RJCT, TatraPayPlusService::SIMPLE_STATUS_REJECTED],
+            [PaymentMethod::BANK_TRANSFER, BankTransferStatus::ACSC, TatraPayPlusService::SIMPLE_STATUS_CAPTURE],
+            [PaymentMethod::BANK_TRANSFER, BankTransferStatus::RCVD, TatraPayPlusService::SIMPLE_STATUS_PENDING],
+            [PaymentMethod::PAY_LATER, PayLaterStatus::_NEW, TatraPayPlusService::SIMPLE_STATUS_PENDING],
+            [PaymentMethod::PAY_LATER, PayLaterStatus::CANCELED, TatraPayPlusService::SIMPLE_STATUS_REJECTED],
+            [PaymentMethod::PAY_LATER, PayLaterStatus::LOAN_APPLICATION_FINISHED, TatraPayPlusService::SIMPLE_STATUS_CAPTURE],
+            [PaymentMethod::CARD_PAY, CardPayStatus::OK, TatraPayPlusService::SIMPLE_STATUS_CAPTURE],
+            [PaymentMethod::CARD_PAY, CardPayStatus::FAIL, TatraPayPlusService::SIMPLE_STATUS_REJECTED],
+        ];
+
+        foreach ($test_cases as [$payment_method, $status, $expected_result]) {
+            $content = [
+                'selectedPaymentMethod' => $payment_method,
+                'authorizationStatus' => 'AUTH_DONE',
+                'status' => $status,
+            ];
+            if ($payment_method === PaymentMethod::CARD_PAY) {
+                $content['status'] = [
+                    'status' => $status,
+                    'currency' => 'EUR',
+                ];
+            }
+            $status_response['object'] =ObjectSerializer::deserialize(
+                $content, '\Tatrapayplus\TatrapayplusApiClient\Model\PaymentIntentStatusResponse', []
+            );
+
+            $simple_status = TatraPayPlusService::map_simple_status($status_response);
+
+            $this->assertSame($simple_status, $expected_result);
+        }
     }
 }
 
