@@ -211,11 +211,7 @@ class Configuration
      */
     public static function getDefaultConfiguration($hostIndex = 1)
     {
-        if (self::$defaultConfiguration === null) {
-            self::$defaultConfiguration = new Configuration($hostIndex);
-        }
-
-        return self::$defaultConfiguration;
+        return new Configuration($hostIndex);
     }
 
     /**
