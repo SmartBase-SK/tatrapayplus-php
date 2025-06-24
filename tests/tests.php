@@ -51,6 +51,29 @@ final class Tests extends TestCase
         $this->client_secret = getenv("TATRAPAY_CLIENT_SECRET");
     }
 
+    private function getDirectTransactionPayloadRequiredFieldsOnly(
+        float $total,
+        string $currency,
+    ): InitiateDirectTransactionRequest
+    {
+        $request_data = new InitiateDirectTransactionRequest([
+            "amount" => new Amount([
+                "amount_value" => $total,
+                "currency" => $currency,
+            ]),
+            "is_pre_authorization" => true,
+            "end_to_end" => new E2e([
+                "variable_symbol" => "123",
+            ]),
+            "tds_data" => new DirectTransactionTDSData([
+                "card_holder" => "--",
+                "email" => "janko.hrasko@example.com",
+            ]),
+            "token" => "ABC12345",
+        ]);
+        return $request_data;
+    }
+
     private function getDirectTransactionPayload(
         float $total,
         string $currency,
@@ -85,11 +108,39 @@ final class Tests extends TestCase
                 "location" => "Test 123",
                 "country" => "SK",
             ]),
-            "token" => new Token([
-                "google_pay_token" => "ABC12345"
-            ]),
+            "token" => "ABC12345",
         ]);
         return $request_data;
+    }
+
+    private function getPaymentPayloadRequiredFieldsOnly(
+        float $total,
+        string $currency,
+        bool $save_card = false
+    ): InitiatePaymentRequest {
+        $order_id = uniqid();
+
+        $basePayment = new BasePayment([
+            "instructed_amount" => new Amount([
+                "amount_value" => $total,
+                "currency" => $currency,
+            ]),
+            "end_to_end" => new E2e([
+                "variable_symbol" => "123",
+            ]),
+        ]);
+        $userData = new UserData([
+            "first_name" => "|Jan\ko|",
+            "last_name" => "<Hraško>\\`",
+            "email" => "janko.hrasko@example.com",
+        ]);
+        $bankTransfer = new BankTransfer();
+
+        return new InitiatePaymentRequest([
+            "base_payment" => $basePayment,
+            "bank_transfer" => $bankTransfer,
+            "user_data" => $userData,
+        ]);
     }
 
     private function getPaymentPayload(
@@ -275,6 +326,44 @@ final class Tests extends TestCase
         $accept_language = "sk";
         $preferred_method = null;
         $initiate_payment_request = $this->getPaymentPayload(10, "EUR");
+
+        $api_instance = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret
+        );
+
+        $response = $api_instance->initiatePayment(
+            "http://localhost",
+            $initiate_payment_request,
+            $preferred_method,
+            $accept_language
+        );
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertFalse(is_null($response["response"]));
+
+        $payment_id = $response["object"]->getPaymentId();
+        $this->assertFalse(is_null($payment_id));
+
+        [$simple_status, $response] = $api_instance->getPaymentIntentStatus($payment_id);
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertSame($response["response"]->getStatusCode(), 200);
+        $this->assertSame(
+            $response["object"]->getAuthorizationStatus(),
+            PaymentIntentStatusResponse::AUTHORIZATION_STATUS__NEW
+        );
+        $this->assertSame(
+            $simple_status,
+            TatraPayPlusService::SIMPLE_STATUS_PENDING
+        );
+    }
+
+    public function testInitiatePaymentCheckPaymentStatusRequiredFieldsOnly(): void
+    {
+        $accept_language = "sk";
+        $preferred_method = null;
+        $initiate_payment_request = $this->getPaymentPayloadRequiredFieldsOnly(10, "EUR");
 
         $api_instance = new TatraPayPlusAPIApi(
             $this->client_id,
@@ -524,41 +613,68 @@ final class Tests extends TestCase
         $this->assertSame(16, count($logger->lines));
     }
 
-    public function testInitiateDirectTransactionMocked(): void
+    public function testInitiateDirectTransaction(): void
     {
-        $mock_response_body = json_encode(
-            array(
-                "paymentId" => "123456789",
-                "redirectFormHtml" => "custom HTML"
-            )
+        $api_instance = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret
         );
-        $mock_response = new HttpResponse($mock_response_body, [], 201);
-        $mock_client = $this->getMockBuilder(CurlClient::class)
-            ->onlyMethods(["send"])
-            ->getMock();
-        $mock_client->method("send")->will($this->returnValue($mock_response));
-
-        $api_instance = $this->getMockBuilder(TatraPayPlusAPIApi::class)
-            ->onlyMethods(["addAuthHeader"])
-            ->setConstructorArgs([$this->client_id, $this->client_secret])
-            ->getMock();
-        $api_instance
-            ->method("addAuthHeader")
-            ->will($this->returnCallback("mock_addAuthHeader"));
-        $api_instance->setClient($mock_client);
-
-        $request_data = $this->getDirectTransactionPayload(10, "EUR");
+        $request_data = $this->getDirectTransactionPayload(1.01, "EUR");
 
         $response = $api_instance->initiateDirectTransaction(
             "http://localhost",
             $request_data,
         );
+        $payment_id = $response["object"]->getPaymentId();
 
         $this->assertFalse(is_null($response["object"]));
         $this->assertFalse(is_null($response["response"]));
+        $this->assertFalse(is_null($payment_id));
 
-        $this->assertSame("123456789", $response["object"]->getPaymentId());
-        $this->assertSame("custom HTML", $response["object"]->getRedirectFormHtml());
+        [$simple_status, $response] = $api_instance->getPaymentIntentStatus($payment_id);
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertSame($response["response"]->getStatusCode(), 200);
+        $this->assertSame(
+            $response["object"]->getAuthorizationStatus(),
+            PaymentIntentStatusResponse::AUTHORIZATION_STATUS_AUTH_DONE
+        );
+        $this->assertSame(
+            $simple_status,
+            TatraPayPlusService::SIMPLE_STATUS_PENDING
+        );
+    }
+
+    public function testInitiateDirectTransactionRequiredFieldsOnly(): void
+    {
+        $api_instance = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret
+        );
+        $request_data = $this->getDirectTransactionPayloadRequiredFieldsOnly(1.01, "EUR");
+
+        $response = $api_instance->initiateDirectTransaction(
+            "http://localhost",
+            $request_data,
+        );
+        $payment_id = $response["object"]->getPaymentId();
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertFalse(is_null($response["response"]));
+        $this->assertFalse(is_null($payment_id));
+
+        [$simple_status, $response] = $api_instance->getPaymentIntentStatus($payment_id);
+
+        $this->assertFalse(is_null($response["object"]));
+        $this->assertSame($response["response"]->getStatusCode(), 200);
+        $this->assertSame(
+            $response["object"]->getAuthorizationStatus(),
+            PaymentIntentStatusResponse::AUTHORIZATION_STATUS_AUTH_DONE
+        );
+        $this->assertSame(
+            $simple_status,
+            TatraPayPlusService::SIMPLE_STATUS_PENDING
+        );
     }
 
     public function testMapSimpleStatus()

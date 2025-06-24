@@ -220,10 +220,14 @@ class TatraPayPlusService
     {
         if ($initiate_payment_request instanceof InitiateDirectTransactionRequest) {
             $card_detail = $initiate_payment_request->getTdsData();
-            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+            if ($card_detail) {
+                $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+            }
         } else {
             $card_detail = $initiate_payment_request->getCardDetail();
-            $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+            if ($card_detail) {
+                $card_detail->setCardHolder(self::remove_diacritics($card_detail->getCardHolder()));
+            }
         }
 
         return $initiate_payment_request;
