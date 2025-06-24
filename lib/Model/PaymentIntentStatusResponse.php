@@ -427,7 +427,7 @@ class PaymentIntentStatusResponse implements ModelInterface, ArrayAccess, \JsonS
         if (is_null($status)) {
             throw new \InvalidArgumentException('non-nullable status cannot be null');
         }
-        if ($this->getSelectedPaymentMethod() == PaymentMethod::CARD_PAY) {
+        if ($this->getSelectedPaymentMethod() == PaymentMethod::CARD_PAY || $this->getSelectedPaymentMethod() == PaymentMethod::DIRECT_API) {
             $type = '\Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatusStructure';
             $value = ObjectSerializer::deserialize($status, $type, null);
         } elseif (is_string($status)) {
