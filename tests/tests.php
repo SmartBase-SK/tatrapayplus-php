@@ -9,7 +9,7 @@ use Tatrapayplus\TatrapayplusApiClient\Model\BankTransferStatus;
 use Tatrapayplus\TatrapayplusApiClient\Model\CardPayStatus;
 use Tatrapayplus\TatrapayplusApiClient\Model\CardPayUpdateInstruction;
 use Tatrapayplus\TatrapayplusApiClient\Model\ColorAttribute;
-use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData;
+use Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData;
 use Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionTDSData;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiateDirectTransactionRequest;
 use Tatrapayplus\TatrapayplusApiClient\Model\InitiatePaymentRequest;
@@ -33,6 +33,9 @@ use Tatrapayplus\TatrapayplusApiClient\Model\CardDetail;
 use Tatrapayplus\TatrapayplusApiClient\Model\OrderItem;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetail;
 use Tatrapayplus\TatrapayplusApiClient\Model\ItemDetailLangUnit;
+use Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationRequest;
+use Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationResponseItem;
+use Tatrapayplus\TatrapayplusApiClient\Model\CapacityInfo;
 use Tatrapayplus\TatrapayplusApiClient\CurlClient;
 use Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 use Tatrapayplus\TatrapayplusApiClient\TatraPayPlusLogger;
@@ -102,7 +105,7 @@ final class Tests extends TestCase
                 "billing_address" => $address,
                 "shipping_address" => $address,
             ]),
-            "ipsp_data" => new DirectTransactionIPSPData([
+            "ipsp_data" => new TransactionIPSPData([
                 "sub_merchant_id" => "12345",
                 "name" => "Test 123",
                 "location" => "Test 123",
@@ -711,6 +714,31 @@ final class Tests extends TestCase
 
             $this->assertSame($simple_status, $expected_result);
         }
+    }
+
+    public function testLoanPrecalculation()
+    {
+        $request = new BasicCalculationRequest([
+            "payment_method" => PaymentMethod::PAY_LATER,
+            "loan_amount" => 150.45,
+        ]);
+        $api_instance = new TatraPayPlusAPIApi(
+            $this->client_id,
+            $this->client_secret,
+            mode: TatraPayPlusAPIApi::PRODUCTION
+        );
+
+        $response = $api_instance->loanPrecalculation($request);
+
+        $this->assertSame($response["response"]->getStatusCode(), 200);
+        $response_list = $response['object'];
+        $this->assertIsArray($response_list);
+        $this->assertTrue(array_is_list($response_list));
+        foreach ($response_list as $item) {
+            $this->assertInstanceOf(BasicCalculationResponseItem::class, $item);
+        }
+        $first_offer = $response_list[0];
+        $this->assertTrue(! is_null($first_offer->getLoanInterestRate()));
     }
 }
 

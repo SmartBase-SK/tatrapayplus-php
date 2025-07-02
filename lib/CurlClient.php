@@ -39,6 +39,9 @@ class CurlClient
         } elseif ($request->method === "PATCH") {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PATCH");
             curl_setopt($ch, CURLOPT_POSTFIELDS, $request->httpBody);
+        } elseif ($request->method === "PUT") {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $request->httpBody);
         } else {
             exit("Unsupported request type");
         }

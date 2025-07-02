@@ -1,6 +1,6 @@
 <?php
 /**
- * Model400ErrorBody
+ * TransactionIPSPData
  *
  * PHP version 8.1
  *
@@ -32,15 +32,16 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * Model400ErrorBody Class Doc Comment
+ * TransactionIPSPData Class Doc Comment
  *
  * @category Class
+ * @description In case of payment facilitator mode - this structure is mandatory
  * @package  Tatrapayplus\TatrapayplusApiClient
  * @author   OpenAPI Generator team
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializable
+class TransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +50,7 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
       *
       * @var string
       */
-    protected static $openAPIModelName = '400_errorBody';
+    protected static $openAPIModelName = 'transactionIPSPData';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,9 +58,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
       * @var string[]
       */
     protected static $openAPITypes = [
-        'error_code' => 'string',
-        'error_description' => 'string',
-        'available_payment_methods' => '\Tatrapayplus\TatrapayplusApiClient\Model\AvailablePaymentMethod[]'
+        'sub_merchant_id' => 'string',
+        'name' => 'string',
+        'location' => 'string',
+        'country' => 'string'
     ];
 
     /**
@@ -70,9 +72,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'error_code' => null,
-        'error_description' => null,
-        'available_payment_methods' => null
+        'sub_merchant_id' => null,
+        'name' => null,
+        'location' => null,
+        'country' => null
     ];
 
     /**
@@ -81,9 +84,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'error_code' => false,
-        'error_description' => false,
-        'available_payment_methods' => false
+        'sub_merchant_id' => false,
+        'name' => false,
+        'location' => false,
+        'country' => false
     ];
 
     /**
@@ -172,9 +176,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
      * @var string[]
      */
     protected static $attributeMap = [
-        'error_code' => 'errorCode',
-        'error_description' => 'errorDescription',
-        'available_payment_methods' => 'availablePaymentMethods'
+        'sub_merchant_id' => 'subMerchantId',
+        'name' => 'name',
+        'location' => 'location',
+        'country' => 'country'
     ];
 
     /**
@@ -183,9 +188,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
      * @var string[]
      */
     protected static $setters = [
-        'error_code' => 'setErrorCode',
-        'error_description' => 'setErrorDescription',
-        'available_payment_methods' => 'setAvailablePaymentMethods'
+        'sub_merchant_id' => 'setSubMerchantId',
+        'name' => 'setName',
+        'location' => 'setLocation',
+        'country' => 'setCountry'
     ];
 
     /**
@@ -194,9 +200,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
      * @var string[]
      */
     protected static $getters = [
-        'error_code' => 'getErrorCode',
-        'error_description' => 'getErrorDescription',
-        'available_payment_methods' => 'getAvailablePaymentMethods'
+        'sub_merchant_id' => 'getSubMerchantId',
+        'name' => 'getName',
+        'location' => 'getLocation',
+        'country' => 'getCountry'
     ];
 
     /**
@@ -240,57 +247,6 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
         return self::$openAPIModelName;
     }
 
-    public const ERROR_CODE_NO_CONTRACT = 'NO_CONTRACT';
-    public const ERROR_CODE_ILLEGAL_ARGUMENT = 'ILLEGAL_ARGUMENT';
-    public const ERROR_CODE_TOT_AMNT_LOW = 'TOT_AMNT_LOW';
-    public const ERROR_CODE_TOT_AMNT_MISMATCH = 'TOT_AMNT_MISMATCH';
-    public const ERROR_CODE_PAYMENT_NOT_FOUND = 'PAYMENT_NOT_FOUND';
-    public const ERROR_CODE_NOT_ALLOWED_OPER = 'NOT_ALLOWED_OPER';
-    public const ERROR_CODE_DUPLICATE_CALL = 'DUPLICATE_CALL';
-    public const ERROR_CODE_PA_AMOUNT_EXCEEDED = 'PA_AMOUNT_EXCEEDED';
-    public const ERROR_CODE_PA_NOT_FOUND = 'PA_NOT_FOUND';
-    public const ERROR_CODE_PA_ERROR = 'PA_ERROR';
-    public const ERROR_CODE_CB_AMOUNT_EXCEEDED = 'CB_AMOUNT_EXCEEDED';
-    public const ERROR_CODE_CB_NOT_FOUND = 'CB_NOT_FOUND';
-    public const ERROR_CODE_CB_TOO_OLD = 'CB_TOO_OLD';
-    public const ERROR_CODE_CB_ERROR = 'CB_ERROR';
-    public const ERROR_CODE_NO_AVAIL_PAY_METH = 'NO_AVAIL_PAY_METH';
-    public const ERROR_CODE_LOAN_AMNT_LOW = 'LOAN_AMNT_LOW';
-    public const ERROR_CODE_LOAN_AMNT_HIGH = 'LOAN_AMNT_HIGH';
-    public const ERROR_CODE_NEGATIVE_VALUE_NOT_ALLOWED = 'NEGATIVE_VALUE_NOT_ALLOWED';
-    public const ERROR_CODE_INSUFFICIENT_CAPACITY = 'INSUFFICIENT_CAPACITY';
-    public const ERROR_CODE_INVALID_PARAMETER = 'INVALID_PARAMETER';
-
-    /**
-     * Gets allowable values of the enum
-     *
-     * @return string[]
-     */
-    public function getErrorCodeAllowableValues()
-    {
-        return [
-            self::ERROR_CODE_NO_CONTRACT,
-            self::ERROR_CODE_ILLEGAL_ARGUMENT,
-            self::ERROR_CODE_TOT_AMNT_LOW,
-            self::ERROR_CODE_TOT_AMNT_MISMATCH,
-            self::ERROR_CODE_PAYMENT_NOT_FOUND,
-            self::ERROR_CODE_NOT_ALLOWED_OPER,
-            self::ERROR_CODE_DUPLICATE_CALL,
-            self::ERROR_CODE_PA_AMOUNT_EXCEEDED,
-            self::ERROR_CODE_PA_NOT_FOUND,
-            self::ERROR_CODE_PA_ERROR,
-            self::ERROR_CODE_CB_AMOUNT_EXCEEDED,
-            self::ERROR_CODE_CB_NOT_FOUND,
-            self::ERROR_CODE_CB_TOO_OLD,
-            self::ERROR_CODE_CB_ERROR,
-            self::ERROR_CODE_NO_AVAIL_PAY_METH,
-            self::ERROR_CODE_LOAN_AMNT_LOW,
-            self::ERROR_CODE_LOAN_AMNT_HIGH,
-            self::ERROR_CODE_NEGATIVE_VALUE_NOT_ALLOWED,
-            self::ERROR_CODE_INSUFFICIENT_CAPACITY,
-            self::ERROR_CODE_INVALID_PARAMETER,
-        ];
-    }
 
     /**
      * Associative array for storing property values
@@ -307,9 +263,10 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('error_code', $data ?? [], null);
-        $this->setIfExists('error_description', $data ?? [], null);
-        $this->setIfExists('available_payment_methods', $data ?? [], null);
+        $this->setIfExists('sub_merchant_id', $data ?? [], null);
+        $this->setIfExists('name', $data ?? [], null);
+        $this->setIfExists('location', $data ?? [], null);
+        $this->setIfExists('country', $data ?? [], null);
     }
 
     /**
@@ -339,21 +296,32 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
     {
         $invalidProperties = [];
 
-        $allowedValues = $this->getErrorCodeAllowableValues();
-        if (!is_null($this->container['error_code']) && !in_array($this->container['error_code'], $allowedValues, true)) {
-            $invalidProperties[] = sprintf(
-                "invalid value '%s' for 'error_code', must be one of '%s'",
-                $this->container['error_code'],
-                implode("', '", $allowedValues)
-            );
+        if ($this->container['sub_merchant_id'] === null) {
+            $invalidProperties[] = "'sub_merchant_id' can't be null";
+        }
+        if (!preg_match("/^\\d{1,15}$/", $this->container['sub_merchant_id'])) {
+            $invalidProperties[] = "invalid value for 'sub_merchant_id', must be conform to the pattern /^\\d{1,15}$/.";
         }
 
-        if (!is_null($this->container['error_code']) && (mb_strlen($this->container['error_code']) > 20)) {
-            $invalidProperties[] = "invalid value for 'error_code', the character length must be smaller than or equal to 20.";
+        if ($this->container['name'] === null) {
+            $invalidProperties[] = "'name' can't be null";
+        }
+        if (!preg_match("/^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/", $this->container['name'])) {
+            $invalidProperties[] = "invalid value for 'name', must be conform to the pattern /^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/.";
         }
 
-        if (!is_null($this->container['error_description']) && (mb_strlen($this->container['error_description']) > 1024)) {
-            $invalidProperties[] = "invalid value for 'error_description', the character length must be smaller than or equal to 1024.";
+        if ($this->container['location'] === null) {
+            $invalidProperties[] = "'location' can't be null";
+        }
+        if (!preg_match("/^[ 0-9a-zA-Z-]{1,13}$/", $this->container['location'])) {
+            $invalidProperties[] = "invalid value for 'location', must be conform to the pattern /^[ 0-9a-zA-Z-]{1,13}$/.";
+        }
+
+        if ($this->container['country'] === null) {
+            $invalidProperties[] = "'country' can't be null";
+        }
+        if (!preg_match("/[A-Z]{2}/", $this->container['country'])) {
+            $invalidProperties[] = "invalid value for 'country', must be conform to the pattern /[A-Z]{2}/.";
         }
 
         return $invalidProperties;
@@ -372,100 +340,129 @@ class Model400ErrorBody implements ModelInterface, ArrayAccess, \JsonSerializabl
 
 
     /**
-     * Gets error_code
+     * Gets sub_merchant_id
      *
-     * @return string|null
+     * @return string
      */
-    public function getErrorCode()
+    public function getSubMerchantId()
     {
-        return $this->container['error_code'];
+        return $this->container['sub_merchant_id'];
     }
 
     /**
-     * Sets error_code
+     * Sets sub_merchant_id
      *
-     * @param string|null $error_code error_code
+     * @param string $sub_merchant_id sub_merchant_id
      *
      * @return self
      */
-    public function setErrorCode($error_code)
+    public function setSubMerchantId($sub_merchant_id)
     {
-        if (is_null($error_code)) {
-            throw new \InvalidArgumentException('non-nullable error_code cannot be null');
-        }
-        $allowedValues = $this->getErrorCodeAllowableValues();
-        if (!in_array($error_code, $allowedValues, true)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    "Invalid value '%s' for 'error_code', must be one of '%s'",
-                    $error_code,
-                    implode("', '", $allowedValues)
-                )
-            );
-        }
-        if ((mb_strlen($error_code) > 20)) {
-            throw new \InvalidArgumentException('invalid length for $error_code when calling Model400ErrorBody., must be smaller than or equal to 20.');
+        if (is_null($sub_merchant_id)) {
+            throw new \InvalidArgumentException('non-nullable sub_merchant_id cannot be null');
         }
 
-        $this->container['error_code'] = $error_code;
+        if ((!preg_match("/^\\d{1,15}$/", ObjectSerializer::toString($sub_merchant_id)))) {
+            throw new \InvalidArgumentException("invalid value for \$sub_merchant_id when calling TransactionIPSPData., must conform to the pattern /^\\d{1,15}$/.");
+        }
+
+        $this->container['sub_merchant_id'] = $sub_merchant_id;
 
         return $this;
     }
 
     /**
-     * Gets error_description
+     * Gets name
      *
-     * @return string|null
+     * @return string
      */
-    public function getErrorDescription()
+    public function getName()
     {
-        return $this->container['error_description'];
+        return $this->container['name'];
     }
 
     /**
-     * Sets error_description
+     * Sets name
      *
-     * @param string|null $error_description error_description
+     * @param string $name name
      *
      * @return self
      */
-    public function setErrorDescription($error_description)
+    public function setName($name)
     {
-        if (is_null($error_description)) {
-            throw new \InvalidArgumentException('non-nullable error_description cannot be null');
-        }
-        if ((mb_strlen($error_description) > 1024)) {
-            throw new \InvalidArgumentException('invalid length for $error_description when calling Model400ErrorBody., must be smaller than or equal to 1024.');
+        if (is_null($name)) {
+            throw new \InvalidArgumentException('non-nullable name cannot be null');
         }
 
-        $this->container['error_description'] = $error_description;
+        if ((!preg_match("/^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/", ObjectSerializer::toString($name)))) {
+            throw new \InvalidArgumentException("invalid value for \$name when calling TransactionIPSPData., must conform to the pattern /^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/.");
+        }
+
+        $this->container['name'] = $name;
 
         return $this;
     }
 
     /**
-     * Gets available_payment_methods
+     * Gets location
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\AvailablePaymentMethod[]|null
+     * @return string
      */
-    public function getAvailablePaymentMethods()
+    public function getLocation()
     {
-        return $this->container['available_payment_methods'];
+        return $this->container['location'];
     }
 
     /**
-     * Sets available_payment_methods
+     * Sets location
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\AvailablePaymentMethod[]|null $available_payment_methods Reason codes of declined methods
+     * @param string $location location
      *
      * @return self
      */
-    public function setAvailablePaymentMethods($available_payment_methods)
+    public function setLocation($location)
     {
-        if (is_null($available_payment_methods)) {
-            throw new \InvalidArgumentException('non-nullable available_payment_methods cannot be null');
+        if (is_null($location)) {
+            throw new \InvalidArgumentException('non-nullable location cannot be null');
         }
-        $this->container['available_payment_methods'] = $available_payment_methods;
+
+        if ((!preg_match("/^[ 0-9a-zA-Z-]{1,13}$/", ObjectSerializer::toString($location)))) {
+            throw new \InvalidArgumentException("invalid value for \$location when calling TransactionIPSPData., must conform to the pattern /^[ 0-9a-zA-Z-]{1,13}$/.");
+        }
+
+        $this->container['location'] = $location;
+
+        return $this;
+    }
+
+    /**
+     * Gets country
+     *
+     * @return string
+     */
+    public function getCountry()
+    {
+        return $this->container['country'];
+    }
+
+    /**
+     * Sets country
+     *
+     * @param string $country ISO 3166 ALPHA2 country code.
+     *
+     * @return self
+     */
+    public function setCountry($country)
+    {
+        if (is_null($country)) {
+            throw new \InvalidArgumentException('non-nullable country cannot be null');
+        }
+
+        if ((!preg_match("/[A-Z]{2}/", ObjectSerializer::toString($country)))) {
+            throw new \InvalidArgumentException("invalid value for \$country when calling TransactionIPSPData., must conform to the pattern /[A-Z]{2}/.");
+        }
+
+        $this->container['country'] = $country;
 
         return $this;
     }

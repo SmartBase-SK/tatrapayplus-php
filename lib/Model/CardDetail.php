@@ -63,7 +63,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => 'string',
         'billing_address' => '\Tatrapayplus\TatrapayplusApiClient\Model\Address',
         'shipping_address' => '\Tatrapayplus\TatrapayplusApiClient\Model\Address',
-        'comfort_pay' => '\Tatrapayplus\TatrapayplusApiClient\Model\CardIdentifierOrRegister'
+        'comfort_pay' => '\Tatrapayplus\TatrapayplusApiClient\Model\CardIdentifierOrRegister',
+        'ipsp_data' => '\Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData'
     ];
 
     /**
@@ -79,7 +80,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => null,
         'billing_address' => null,
         'shipping_address' => null,
-        'comfort_pay' => null
+        'comfort_pay' => null,
+        'ipsp_data' => null
     ];
 
     /**
@@ -93,7 +95,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => false,
         'billing_address' => false,
         'shipping_address' => false,
-        'comfort_pay' => false
+        'comfort_pay' => false,
+        'ipsp_data' => false
     ];
 
     /**
@@ -187,7 +190,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => 'cardHolder',
         'billing_address' => 'billingAddress',
         'shipping_address' => 'shippingAddress',
-        'comfort_pay' => 'comfortPay'
+        'comfort_pay' => 'comfortPay',
+        'ipsp_data' => 'ipspData'
     ];
 
     /**
@@ -201,7 +205,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => 'setCardHolder',
         'billing_address' => 'setBillingAddress',
         'shipping_address' => 'setShippingAddress',
-        'comfort_pay' => 'setComfortPay'
+        'comfort_pay' => 'setComfortPay',
+        'ipsp_data' => 'setIpspData'
     ];
 
     /**
@@ -215,7 +220,8 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         'card_holder' => 'getCardHolder',
         'billing_address' => 'getBillingAddress',
         'shipping_address' => 'getShippingAddress',
-        'comfort_pay' => 'getComfortPay'
+        'comfort_pay' => 'getComfortPay',
+        'ipsp_data' => 'getIpspData'
     ];
 
     /**
@@ -310,6 +316,7 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
         $this->setIfExists('billing_address', $data ?? [], null);
         $this->setIfExists('shipping_address', $data ?? [], null);
         $this->setIfExists('comfort_pay', $data ?? [], null);
+        $this->setIfExists('ipsp_data', $data ?? [], null);
     }
 
     /**
@@ -556,6 +563,33 @@ class CardDetail implements ModelInterface, ArrayAccess, \JsonSerializable
             throw new \InvalidArgumentException('non-nullable comfort_pay cannot be null');
         }
         $this->container['comfort_pay'] = $comfort_pay;
+
+        return $this;
+    }
+
+    /**
+     * Gets ipsp_data
+     *
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData|null
+     */
+    public function getIpspData()
+    {
+        return $this->container['ipsp_data'];
+    }
+
+    /**
+     * Sets ipsp_data
+     *
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData|null $ipsp_data ipsp_data
+     *
+     * @return self
+     */
+    public function setIpspData($ipsp_data)
+    {
+        if (is_null($ipsp_data)) {
+            throw new \InvalidArgumentException('non-nullable ipsp_data cannot be null');
+        }
+        $this->container['ipsp_data'] = $ipsp_data;
 
         return $this;
     }

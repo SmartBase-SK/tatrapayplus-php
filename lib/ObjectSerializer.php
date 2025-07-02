@@ -473,7 +473,16 @@ class ObjectSerializer
             $data = is_string($data) ? TatraPayPlusAPIApi::json_decode($data) : $data;
 
             if (is_array($data)) {
-                $data = (object) $data;
+                if (array_is_list($data)) {
+                    // for loans - pure list of class objects
+                    $instance = [];
+                    foreach ($data as $item) {
+                        $instance[] = self::deserialize($item, $class, $httpHeaders);
+                    }
+                    return $instance;
+                } else {
+                    $data = (object) $data;
+                }
             }
 
             // If a discriminator is defined and points to a valid subclass, use it.

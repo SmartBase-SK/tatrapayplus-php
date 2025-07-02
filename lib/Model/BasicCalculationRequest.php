@@ -1,6 +1,6 @@
 <?php
 /**
- * DirectTransactionIPSPData
+ * BasicCalculationRequest
  *
  * PHP version 8.1
  *
@@ -32,7 +32,7 @@ use \ArrayAccess;
 use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
 
 /**
- * DirectTransactionIPSPData Class Doc Comment
+ * BasicCalculationRequest Class Doc Comment
  *
  * @category Class
  * @package  Tatrapayplus\TatrapayplusApiClient
@@ -40,7 +40,7 @@ use \Tatrapayplus\TatrapayplusApiClient\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSerializable
+class BasicCalculationRequest implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -49,7 +49,7 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
       *
       * @var string
       */
-    protected static $openAPIModelName = 'directTransactionIPSPData';
+    protected static $openAPIModelName = 'basicCalculationRequest';
 
     /**
       * Array of property to type mappings. Used for (de)serialization
@@ -57,10 +57,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
       * @var string[]
       */
     protected static $openAPITypes = [
-        'sub_merchant_id' => 'string',
-        'name' => 'string',
-        'location' => 'string',
-        'country' => 'string'
+        'payment_method' => 'string',
+        'loan_amount' => 'float',
+        'capacity_info' => '\Tatrapayplus\TatrapayplusApiClient\Model\CapacityInfo'
     ];
 
     /**
@@ -71,10 +70,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'sub_merchant_id' => null,
-        'name' => null,
-        'location' => null,
-        'country' => null
+        'payment_method' => null,
+        'loan_amount' => 'double',
+        'capacity_info' => null
     ];
 
     /**
@@ -83,10 +81,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'sub_merchant_id' => false,
-        'name' => false,
-        'location' => false,
-        'country' => false
+        'payment_method' => false,
+        'loan_amount' => false,
+        'capacity_info' => false
     ];
 
     /**
@@ -175,10 +172,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
      * @var string[]
      */
     protected static $attributeMap = [
-        'sub_merchant_id' => 'subMerchantId',
-        'name' => 'name',
-        'location' => 'location',
-        'country' => 'country'
+        'payment_method' => 'paymentMethod',
+        'loan_amount' => 'loanAmount',
+        'capacity_info' => 'capacityInfo'
     ];
 
     /**
@@ -187,10 +183,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
      * @var string[]
      */
     protected static $setters = [
-        'sub_merchant_id' => 'setSubMerchantId',
-        'name' => 'setName',
-        'location' => 'setLocation',
-        'country' => 'setCountry'
+        'payment_method' => 'setPaymentMethod',
+        'loan_amount' => 'setLoanAmount',
+        'capacity_info' => 'setCapacityInfo'
     ];
 
     /**
@@ -199,10 +194,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
      * @var string[]
      */
     protected static $getters = [
-        'sub_merchant_id' => 'getSubMerchantId',
-        'name' => 'getName',
-        'location' => 'getLocation',
-        'country' => 'getCountry'
+        'payment_method' => 'getPaymentMethod',
+        'loan_amount' => 'getLoanAmount',
+        'capacity_info' => 'getCapacityInfo'
     ];
 
     /**
@@ -246,6 +240,19 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
         return self::$openAPIModelName;
     }
 
+    public const PAYMENT_METHOD_PAY_LATER = 'PAY_LATER';
+
+    /**
+     * Gets allowable values of the enum
+     *
+     * @return string[]
+     */
+    public function getPaymentMethodAllowableValues()
+    {
+        return [
+            self::PAYMENT_METHOD_PAY_LATER,
+        ];
+    }
 
     /**
      * Associative array for storing property values
@@ -262,10 +269,9 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
      */
     public function __construct(?array $data = null)
     {
-        $this->setIfExists('sub_merchant_id', $data ?? [], null);
-        $this->setIfExists('name', $data ?? [], null);
-        $this->setIfExists('location', $data ?? [], null);
-        $this->setIfExists('country', $data ?? [], null);
+        $this->setIfExists('payment_method', $data ?? [], null);
+        $this->setIfExists('loan_amount', $data ?? [], null);
+        $this->setIfExists('capacity_info', $data ?? [], null);
     }
 
     /**
@@ -295,32 +301,24 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
     {
         $invalidProperties = [];
 
-        if ($this->container['sub_merchant_id'] === null) {
-            $invalidProperties[] = "'sub_merchant_id' can't be null";
-        }
-        if (!preg_match("/^\\d{1,15}$/", $this->container['sub_merchant_id'])) {
-            $invalidProperties[] = "invalid value for 'sub_merchant_id', must be conform to the pattern /^\\d{1,15}$/.";
-        }
-
-        if ($this->container['name'] === null) {
-            $invalidProperties[] = "'name' can't be null";
-        }
-        if (!preg_match("/^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/", $this->container['name'])) {
-            $invalidProperties[] = "invalid value for 'name', must be conform to the pattern /^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/.";
+        $allowedValues = $this->getPaymentMethodAllowableValues();
+        if (!is_null($this->container['payment_method']) && !in_array($this->container['payment_method'], $allowedValues, true)) {
+            $invalidProperties[] = sprintf(
+                "invalid value '%s' for 'payment_method', must be one of '%s'",
+                $this->container['payment_method'],
+                implode("', '", $allowedValues)
+            );
         }
 
-        if ($this->container['location'] === null) {
-            $invalidProperties[] = "'location' can't be null";
+        if ($this->container['loan_amount'] === null) {
+            $invalidProperties[] = "'loan_amount' can't be null";
         }
-        if (!preg_match("/^[ 0-9a-zA-Z-]{1,13}$/", $this->container['location'])) {
-            $invalidProperties[] = "invalid value for 'location', must be conform to the pattern /^[ 0-9a-zA-Z-]{1,13}$/.";
+        if (($this->container['loan_amount'] > 40000)) {
+            $invalidProperties[] = "invalid value for 'loan_amount', must be smaller than or equal to 40000.";
         }
 
-        if ($this->container['country'] === null) {
-            $invalidProperties[] = "'country' can't be null";
-        }
-        if (!preg_match("/[A-Z]{2}/", $this->container['country'])) {
-            $invalidProperties[] = "invalid value for 'country', must be conform to the pattern /[A-Z]{2}/.";
+        if (($this->container['loan_amount'] < 100)) {
+            $invalidProperties[] = "invalid value for 'loan_amount', must be bigger than or equal to 100.";
         }
 
         return $invalidProperties;
@@ -339,129 +337,100 @@ class DirectTransactionIPSPData implements ModelInterface, ArrayAccess, \JsonSer
 
 
     /**
-     * Gets sub_merchant_id
+     * Gets payment_method
      *
-     * @return string
+     * @return string|null
      */
-    public function getSubMerchantId()
+    public function getPaymentMethod()
     {
-        return $this->container['sub_merchant_id'];
+        return $this->container['payment_method'];
     }
 
     /**
-     * Sets sub_merchant_id
+     * Sets payment_method
      *
-     * @param string $sub_merchant_id sub_merchant_id
+     * @param string|null $payment_method Only if isPrecalculationAllowed = true
      *
      * @return self
      */
-    public function setSubMerchantId($sub_merchant_id)
+    public function setPaymentMethod($payment_method)
     {
-        if (is_null($sub_merchant_id)) {
-            throw new \InvalidArgumentException('non-nullable sub_merchant_id cannot be null');
+        if (is_null($payment_method)) {
+            throw new \InvalidArgumentException('non-nullable payment_method cannot be null');
         }
-
-        if ((!preg_match("/^\\d{1,15}$/", ObjectSerializer::toString($sub_merchant_id)))) {
-            throw new \InvalidArgumentException("invalid value for \$sub_merchant_id when calling DirectTransactionIPSPData., must conform to the pattern /^\\d{1,15}$/.");
+        $allowedValues = $this->getPaymentMethodAllowableValues();
+        if (!in_array($payment_method, $allowedValues, true)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    "Invalid value '%s' for 'payment_method', must be one of '%s'",
+                    $payment_method,
+                    implode("', '", $allowedValues)
+                )
+            );
         }
-
-        $this->container['sub_merchant_id'] = $sub_merchant_id;
+        $this->container['payment_method'] = $payment_method;
 
         return $this;
     }
 
     /**
-     * Gets name
+     * Gets loan_amount
      *
-     * @return string
+     * @return float
      */
-    public function getName()
+    public function getLoanAmount()
     {
-        return $this->container['name'];
+        return $this->container['loan_amount'];
     }
 
     /**
-     * Sets name
+     * Sets loan_amount
      *
-     * @param string $name name
+     * @param float $loan_amount Loan amount in EUR
      *
      * @return self
      */
-    public function setName($name)
+    public function setLoanAmount($loan_amount)
     {
-        if (is_null($name)) {
-            throw new \InvalidArgumentException('non-nullable name cannot be null');
+        if (is_null($loan_amount)) {
+            throw new \InvalidArgumentException('non-nullable loan_amount cannot be null');
         }
 
-        if ((!preg_match("/^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/", ObjectSerializer::toString($name)))) {
-            throw new \InvalidArgumentException("invalid value for \$name when calling DirectTransactionIPSPData., must conform to the pattern /^[ 0-9a-zA-Z\\.:\/\\*-]{1,25}$/.");
+        if (($loan_amount > 40000)) {
+            throw new \InvalidArgumentException('invalid value for $loan_amount when calling BasicCalculationRequest., must be smaller than or equal to 40000.');
+        }
+        if (($loan_amount < 100)) {
+            throw new \InvalidArgumentException('invalid value for $loan_amount when calling BasicCalculationRequest., must be bigger than or equal to 100.');
         }
 
-        $this->container['name'] = $name;
+        $this->container['loan_amount'] = $loan_amount;
 
         return $this;
     }
 
     /**
-     * Gets location
+     * Gets capacity_info
      *
-     * @return string
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\CapacityInfo|null
      */
-    public function getLocation()
+    public function getCapacityInfo()
     {
-        return $this->container['location'];
+        return $this->container['capacity_info'];
     }
 
     /**
-     * Sets location
+     * Sets capacity_info
      *
-     * @param string $location location
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\CapacityInfo|null $capacity_info capacity_info
      *
      * @return self
      */
-    public function setLocation($location)
+    public function setCapacityInfo($capacity_info)
     {
-        if (is_null($location)) {
-            throw new \InvalidArgumentException('non-nullable location cannot be null');
+        if (is_null($capacity_info)) {
+            throw new \InvalidArgumentException('non-nullable capacity_info cannot be null');
         }
-
-        if ((!preg_match("/^[ 0-9a-zA-Z-]{1,13}$/", ObjectSerializer::toString($location)))) {
-            throw new \InvalidArgumentException("invalid value for \$location when calling DirectTransactionIPSPData., must conform to the pattern /^[ 0-9a-zA-Z-]{1,13}$/.");
-        }
-
-        $this->container['location'] = $location;
-
-        return $this;
-    }
-
-    /**
-     * Gets country
-     *
-     * @return string
-     */
-    public function getCountry()
-    {
-        return $this->container['country'];
-    }
-
-    /**
-     * Sets country
-     *
-     * @param string $country ISO 3166 ALPHA2 country code.
-     *
-     * @return self
-     */
-    public function setCountry($country)
-    {
-        if (is_null($country)) {
-            throw new \InvalidArgumentException('non-nullable country cannot be null');
-        }
-
-        if ((!preg_match("/[A-Z]{2}/", ObjectSerializer::toString($country)))) {
-            throw new \InvalidArgumentException("invalid value for \$country when calling DirectTransactionIPSPData., must conform to the pattern /[A-Z]{2}/.");
-        }
-
-        $this->container['country'] = $country;
+        $this->container['capacity_info'] = $capacity_info;
 
         return $this;
     }
