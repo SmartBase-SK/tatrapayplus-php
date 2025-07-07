@@ -62,7 +62,7 @@ class InitiateDirectTransactionRequest implements ModelInterface, ArrayAccess, \
         'end_to_end' => '\Tatrapayplus\TatrapayplusApiClient\Model\E2e',
         'is_pre_authorization' => 'bool',
         'tds_data' => '\Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionTDSData',
-        'ipsp_data' => '\Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData',
+        'ipsp_data' => '\Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData',
         'token' => '\Tatrapayplus\TatrapayplusApiClient\Model\Token'
     ];
 
@@ -448,7 +448,7 @@ class InitiateDirectTransactionRequest implements ModelInterface, ArrayAccess, \
     /**
      * Gets ipsp_data
      *
-     * @return \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData|null
+     * @return \Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData|null
      */
     public function getIpspData()
     {
@@ -458,7 +458,7 @@ class InitiateDirectTransactionRequest implements ModelInterface, ArrayAccess, \
     /**
      * Sets ipsp_data
      *
-     * @param \Tatrapayplus\TatrapayplusApiClient\Model\DirectTransactionIPSPData|null $ipsp_data ipsp_data
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\TransactionIPSPData|null $ipsp_data ipsp_data
      *
      * @return self
      */

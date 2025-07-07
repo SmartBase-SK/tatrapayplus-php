@@ -47,6 +47,9 @@ class TatraPayPlusAPIApi
         'setLogo' => [
             'application/json',
         ],
+        'loanPrecalculation' => [
+            'application/json',
+        ],
     ];
     /**
      * @var object
@@ -106,7 +109,7 @@ class TatraPayPlusAPIApi
         } else {
             $this->client = $client;
         }
-        $this->config = \Tatrapayplus\TatrapayplusApiClient\Configuration::getDefaultConfiguration($mode);
+        $this->config = new \Tatrapayplus\TatrapayplusApiClient\Configuration($mode);
     }
 
     /**
@@ -991,5 +994,70 @@ class TatraPayPlusAPIApi
         if (!is_null($this->logger)) {
             $this->logger->log($response, $additional_data);
         }
+    }
+
+    /**
+     * Operation loanPrecalculation
+     *
+     * Calculate loan parameters from input
+     *
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationRequest precalculation_request Request body (required)
+     *
+     * @return array of \Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationResponseItem, HTTP status code, HTTP response headers (array of strings)
+     *
+     * @throws InvalidArgumentException
+     * @throws ApiException on non-2xx response or if the response body is not in the expected format
+     */
+    public function loanPrecalculation($precalculation_request)
+    {
+        $request = $this->loanPrecalculationRequest($precalculation_request);
+
+        return $this->processRequest($request, '\Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationResponseItem', '\Tatrapayplus\TatrapayplusApiClient\Model\Model400ErrorBody');
+    }
+
+    /**
+     * Create request for operation 'loanPrecalculation'
+     *
+     * @param \Tatrapayplus\TatrapayplusApiClient\Model\BasicCalculationRequest precalculation_request Request body (required)
+     *
+     * @return Request
+     *
+     * @throws InvalidArgumentException
+     */
+    public function loanPrecalculationRequest($precalculation_request)
+    {
+        // verify the required parameter 'precalculation_request' is set
+        if ($precalculation_request === null || (is_array($precalculation_request) && count($precalculation_request) === 0)) {
+            throw new InvalidArgumentException('Missing the required parameter precalculation_request when calling loanPrecalculation');
+        }
+
+        $resourcePath = '/v1/payments/loans/precalculation';
+
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json'],
+            self::contentTypes['loanPrecalculation'][0],
+            false
+        );
+
+        $httpBody = static::json_encode(ObjectSerializer::sanitizeForSerialization($precalculation_request));
+
+        // this endpoint requires OAuth (access token)
+        $headers = $this->addAuthHeader($headers);
+
+        $defaultHeaders = $this->getDefaultHeaders();
+
+        $headers = array_merge(
+            $defaultHeaders,
+            $headers
+        );
+
+        $operationHost = $this->config->getHost();
+
+        return new Request(
+            'PUT',
+            $operationHost . $resourcePath,
+            $headers,
+            $httpBody
+        );
     }
 }
