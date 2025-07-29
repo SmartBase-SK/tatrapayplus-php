@@ -82,7 +82,7 @@ class TatraPayPlusService
         $specific_methods
     ) {
         foreach ($specific_methods as $method) {
-            if (array_key_exists($method, $available_methods_currencies)) {
+            if (is_array($available_methods_currencies) && array_key_exists($method, $available_methods_currencies)) {
                 $method_currencies = $available_methods_currencies[$method]['supported_currencies'] ?? [];
                 $amount_range = $available_methods_currencies[$method]['amount_range_rule'] ?? null;
                 if (in_array($currency, $method_currencies)) {
