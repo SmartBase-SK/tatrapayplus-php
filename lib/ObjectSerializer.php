@@ -30,7 +30,7 @@ class ObjectSerializer
 
     public static function removeSpecialCharacters($string)
     {
-        return preg_replace('/[<>`|\\\\]/', '', $string);
+        return preg_replace('/[<>`|]/', '', $string);
     }
 
     /**
