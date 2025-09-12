@@ -133,8 +133,8 @@ final class Tests extends TestCase
             ]),
         ]);
         $userData = new UserData([
-            "first_name" => "|Jan\ko|",
-            "last_name" => "<Hraško>\\`",
+            "first_name" => "|Janko|",
+            "last_name" => "<Hraško>`",
             "email" => "janko.hrasko@example.com",
         ]);
         $bankTransfer = new BankTransfer();
@@ -164,14 +164,14 @@ final class Tests extends TestCase
         ]);
 
         $userData = new UserData([
-            "first_name" => "|Jan\ko|",
-            "last_name" => "<Hraško>\\`",
+            "first_name" => "|Janko|",
+            "last_name" => "<Hraško>`",
             "email" => "janko.hrasko@example.com",
         ]);
 
         $bankTransfer = new BankTransfer();
         $billingAddress = new Address([
-            "street_name" => "<Test|\Street",
+            "street_name" => "<Test|Street",
             "building_number" => "12",
             "town_name" => "T<ow>n",
             "post_code" => "97405",
@@ -739,6 +739,40 @@ final class Tests extends TestCase
         }
         $first_offer = $response_list[0];
         $this->assertTrue(! is_null($first_offer->getLoanInterestRate()));
+    }
+
+    public function testRemoveSpecialCharacters()
+    {
+        $this->assertEquals('helloworld', ObjectSerializer::removeSpecialCharacters('hello<world'));
+        $this->assertEquals('helloworld', ObjectSerializer::removeSpecialCharacters('h<e>l`l|o<w>o|r`ld'));
+        $this->assertEquals('hello\"world', ObjectSerializer::removeSpecialCharacters('hello\"world'));
+        $this->assertEquals('hello\\nworld', ObjectSerializer::removeSpecialCharacters('hello\\nworld'));
+        $this->assertEquals('hello\\\\world', ObjectSerializer::removeSpecialCharacters('hello\\\\world'));
+        $this->assertEquals('', ObjectSerializer::removeSpecialCharacters('<>`|'));
+        $this->assertEquals('', ObjectSerializer::removeSpecialCharacters(''));
+        $this->assertEquals('normalstring', ObjectSerializer::removeSpecialCharacters('normalstring'));
+        $this->assertEquals('test\\data', ObjectSerializer::removeSpecialCharacters('test<\\>data'));
+        $this->assertEquals('path\\file', ObjectSerializer::removeSpecialCharacters('path|\\|file'));
+        $this->assertEquals('code\\function', ObjectSerializer::removeSpecialCharacters('code`\\`function'));
+
+        $input = '..."protocolVersion":"ECv1","signedMessage":"{\"encryptedMessage\"...';
+        $expected = '..."protocolVersion":"ECv1","signedMessage":"{\"encryptedMessage\"...';
+        $this->assertEquals($expected, ObjectSerializer::removeSpecialCharacters($input));
+
+        $input = '...\"protocolVersion\":\"ECv1\",\"signedMessage\":\"{\\\"encryptedMessage\\\"...';
+        $expected = '...\"protocolVersion\":\"ECv1\",\"signedMessage\":\"{\\\"encryptedMessage\\\"...';
+        $this->assertEquals($expected, ObjectSerializer::removeSpecialCharacters($input));
+
+        $jsonInput = '{"name":"John \"Doe\"","message":"Hello\\nWorld","path":"C:\\\\Users\\\\test"}';
+        $expectedJson = '{"name":"John \"Doe\"","message":"Hello\\nWorld","path":"C:\\\\Users\\\\test"}';
+        $this->assertEquals($expectedJson, ObjectSerializer::removeSpecialCharacters($jsonInput));
+
+        $googlePayInput = '{"protocolVersion":"ECv1","signedMessage":"{\"encryptedMessage\":\"data\",\"tag\":\"signature\"}"}';
+        $this->assertEquals($googlePayInput, ObjectSerializer::removeSpecialCharacters($googlePayInput));
+
+        $mixedInput = 'hello<world>\"test\"|value`more\\n';
+        $expectedMixed = 'helloworld\"test\\"valuemore\\n';
+        $this->assertEquals($expectedMixed, ObjectSerializer::removeSpecialCharacters($mixedInput));
     }
 }
 
