@@ -978,7 +978,7 @@ class TatraPayPlusAPIApi
         );
     }
 
-    public static function generateSignedCardId(string $cid, string $public_key_content = null): string
+    public static function generateSignedCardId(string $cid, ?string $public_key_content = null): string
     {
         if (empty($public_key_content)) {
             $public_key_content = file_get_contents(
@@ -989,7 +989,7 @@ class TatraPayPlusAPIApi
         return TatraPayPlusService::generate_signed_card_id_from_cid($cid, $public_key_content);
     }
 
-    public function log(HttpResponse $response, array $additional_data = null): void
+    public function log(HttpResponse $response, ?array $additional_data = null): void
     {
         if (!is_null($this->logger)) {
             $this->logger->log($response, $additional_data);
