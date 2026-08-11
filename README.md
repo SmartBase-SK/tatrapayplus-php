@@ -1,14 +1,14 @@
 # tatrapayplus-php
 
-[![Release](https://img.shields.io/github/v/release/SmartBase-SK/tatrapayplus-php)](https://img.shields.io/github/v/release/SmartBase-SK/tatrapayplus-php)
-[![Build status](https://img.shields.io/github/actions/workflow/status/SmartBase-SK/tatrapayplus-php/php.yml?branch=main)](https://github.com/SmartBase-SK/tatrapayplus-php/actions/workflows/php.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/SmartBase-SK/tatrapayplus-php/branch/main/graph/badge.svg)](https://codecov.io/gh/SmartBase-SK/tatrapayplus-php)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/SmartBase-SK/tatrapayplus-php)](https://img.shields.io/github/commit-activity/m/SmartBase-SK/tatrapayplus-php)
-[![License](https://img.shields.io/github/license/SmartBase-SK/tatrapayplus-php)](https://img.shields.io/github/license/SmartBase-SK/tatrapayplus-php)
+[![Release](https://img.shields.io/github/v/release/tatrabanka/tatrapayplus-php)](https://img.shields.io/github/v/release/tatrabanka/tatrapayplus-php)
+[![Build status](https://img.shields.io/github/actions/workflow/status/tatrabanka/tatrapayplus-php/php.yml?branch=main)](https://github.com/tatrabanka/tatrapayplus-php/actions/workflows/php.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/tatrabanka/tatrapayplus-php/branch/main/graph/badge.svg)](https://codecov.io/gh/tatrabanka/tatrapayplus-php)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/tatrabanka/tatrapayplus-php)](https://img.shields.io/github/commit-activity/m/tatrabanka/tatrapayplus-php)
+[![License](https://img.shields.io/github/license/tatrabanka/tatrapayplus-php)](https://img.shields.io/github/license/tatrabanka/tatrapayplus-php)
 
 PHP SDK for Tatrapay+ payment gateway.
 
-- **Github repository**: <https://github.com/SmartBase-SK/tatrapayplus-php/>
+- **Github repository**: <https://github.com/tatrabanka/tatrapayplus-php/>
 - **Documentation** <https://sdk.tatrabanka.sk/docs/libraries/php/v2.0.0>
 
 ## Type generation
